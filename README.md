@@ -1,19 +1,8 @@
----
+# 🚀 STRIGOTH LOG INVESTIGATOR
 
-# 🚀 STRIGOTH LOG INVESTIGATOR TUI
+> Modern terminal UI for investigating web server logs with focus on **security analysis, anomaly detection, and fast filtering** — fully offline and developer-friendly.
 
-> **Hacker Edition** — Modern cyberpunk-themed terminal UI for investigating web server logs with focus on **security analysis, anomaly detection, and fast filtering** — fully offline and developer-friendly.
-
-```
-╔══════════════════════════════════════════════════════════════════════════════╗
-║  🛡️  STRIGOTH LOG INVESTIGATOR  │  v0.2 Hacker Edition                       ║
-╠══════════════════════════════════════════════════════════════════════════════╣
-║                                                                              ║
-║  A sleek, modern TUI built with Textual + Rich for analyzing nginx logs     ║
-║  with real-time security alerts, interactive filtering, and statistics.     ║
-║                                                                              ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-```
+**Version:** v1.0
 
 ---
 
@@ -59,7 +48,7 @@ python -m tui.app sample_logs/access.log
 
 ---
 
-## 🎨 Features (v0.3 - Hacker Edition)
+## 🎨 Features (v1.0)
 
 ### Core Capabilities
 
@@ -84,7 +73,7 @@ python -m tui.app sample_logs/access.log
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  Log Investigator TUI                           [Header]        │
+│  STRIGOTH LOG INVESTIGATOR v1.0                [Header]         │
 ├──────────┬──────────────────────────────┬───────────┬───────────┤
 │ Filters  │  DataTable (Log Viewer)      │ Statistics│  Alerts   │
 │──────────│──────────────────────────────│───────────┼───────────┤
