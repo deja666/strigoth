@@ -1,0 +1,308 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   STRIGOTH LOG INVESTIGATOR - Clean Dark Theme
+   Tested & Working Colors
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Base */
+Screen {
+    background: #000000;
+}
+
+/* Header */
+Header {
+    background: #1a1a2e;
+    color: #00ff00;
+    height: 3;
+}
+
+Header > HeaderTitle {
+    background: #1a1a2e;
+    color: #00ff00;
+    text-style: bold;
+}
+
+/* Footer */
+Footer {
+    background: #1a1a2e;
+    height: 3;
+}
+
+FooterKey {
+    color: #00ff00;
+}
+
+FooterDescription {
+    color: #888888;
+}
+
+/* Main Layout */
+#main-container {
+    layout: horizontal;
+    height: 1fr;
+}
+
+/* Left Panel - Log Viewer */
+#log-panel {
+    width: 2fr;
+    height: 100%;
+    background: #0a0a0a;
+    border: solid #333333;
+}
+
+#log-table {
+    height: 1fr;
+    width: 100%;
+}
+
+DataTable {
+    border: none;
+    background: #0a0a0a;
+}
+
+DataTable > .datatable--header {
+    background: #1a1a2e;
+    color: #00ff00;
+    text-style: bold;
+}
+
+DataTable > .datatable--cursor {
+    background: #1a1a2e;
+    color: #00ff00;
+}
+
+DataTable > .datatable--hover {
+    background: #111111;
+}
+
+/* Status Colors - Working */
+.status-2xx {
+    color: #00ff00;
+}
+
+.status-3xx {
+    color: #00ffff;
+}
+
+.status-4xx {
+    color: #ffff00;
+}
+
+.status-5xx {
+    color: #ff0000;
+    text-style: bold;
+}
+
+/* Right Panel - Info */
+#info-panel {
+    width: 1fr;
+    height: 100%;
+    background: #050505;
+    border-left: solid #333333;
+}
+
+#info-tabs {
+    height: 4;
+    background: #1a1a2e;
+    padding: 0 1;
+}
+
+#info-tabs Button {
+    width: 1fr;
+    height: 3;
+    margin: 0 1;
+}
+
+#info-content {
+    height: auto;
+    padding: 1;
+    background: #0a0a0a;
+    min-width: 100%;
+}
+
+#info-scroll {
+    height: 1fr;
+}
+
+#info-scroll > .scrollable-container--scrollbar {
+    background: #000000;
+    color: #333333;
+    width: 2;
+}
+
+#info-scroll > .scrollable-container--scrollbar:hover {
+    background: #111111;
+    color: #00ff00;
+}
+
+/* Stats Content */
+#stats-content {
+    color: #00ff00;
+    overflow-y: auto;
+}
+
+/* Alerts Content */
+#alerts-content {
+    color: #ff0000;
+    overflow-y: auto;
+}
+
+/* Panels */
+.panel-title {
+    background: #1a1a2e;
+    color: #00ff00;
+    padding: 0 1;
+    text-style: bold;
+    text-align: center;
+}
+
+/* Stats Content */
+#stats-content {
+    padding: 1;
+    background: #0a0a0a;
+    color: #00ff00;
+}
+
+/* Alerts Content */
+#alerts-content {
+    padding: 1;
+    background: #0a0a0a;
+    color: #ff0000;
+}
+
+/* Status Bar */
+#status-bar {
+    height: 3;
+    background: #1a1a2e;
+    padding: 0 2;
+    content-align: left middle;
+    color: #888888;
+}
+
+/* Filter Display */
+#filter-display {
+    height: 3;
+    background: #0a0a0a;
+    border: solid #333333;
+    padding: 0 1;
+    content-align: left middle;
+    color: #00ff00;
+}
+
+/* Buttons */
+Button {
+    margin: 0 1;
+}
+
+Button.primary {
+    background: #00ff00;
+    color: #000000;
+    text-style: bold;
+}
+
+Button.warning {
+    background: #ffff00;
+    color: #000000;
+}
+
+Button.default {
+    background: #333333;
+    color: #ffffff;
+}
+
+/* Inputs */
+Input {
+    border: solid #333333;
+    background: #0a0a0a;
+    color: #00ff00;
+}
+
+Input:focus {
+    border: solid #00ff00;
+    background: #111111;
+}
+
+/* Modal Screens */
+ModalScreen {
+    background: #000000 70%;
+}
+
+/* Filter Modal */
+#filter-modal {
+    align: center middle;
+    width: 60;
+    height: auto;
+    background: #0a0a0a;
+    border: thick #00ff00;
+    padding: 1 2;
+}
+
+#filter-modal-title {
+    background: #00ff00;
+    color: #000000;
+    padding: 0 1;
+    margin: -1 -2 1 -2;
+    text-style: bold;
+    text-align: center;
+}
+
+#filter-modal Label {
+    color: #00ff00;
+    margin: 1 0 0 0;
+}
+
+#filter-modal Input {
+    width: 100%;
+    margin: 0 0 1 0;
+}
+
+#filter-modal-buttons {
+    margin-top: 1;
+    align: center middle;
+}
+
+/* Help Modal */
+#help-modal {
+    align: center middle;
+    width: 70;
+    height: auto;
+    background: #0a0a0a;
+    border: thick #00ffff;
+    padding: 1 2;
+}
+
+#help-modal-title {
+    background: #00ffff;
+    color: #000000;
+    padding: 0 1;
+    margin: -1 -2 1 -2;
+    text-style: bold;
+    text-align: center;
+}
+
+#help-content {
+    padding: 1;
+    background: #111111;
+    color: #ffffff;
+}
+
+/* Utility */
+.hidden {
+    display: none;
+}
+
+/* Tabs for Info Panel */
+#tabs-container {
+    height: 4;
+    background: #1a1a2e;
+}
+
+#tabs-container Button {
+    width: 1fr;
+    height: 3;
+    margin: 0;
+}
+
+#tabs-container Button.active {
+    background: #00ff00;
+    color: #000000;
+}
