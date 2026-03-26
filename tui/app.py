@@ -30,7 +30,7 @@ from core.filter_engine import FilterEngine, FilterState
 from core.loader import LogLoader
 from core.models import LogEntry
 from core.stats import StatsEngine
-from export.report import export_markdown
+from export.report import export_markdown, export_json
 from rules.security import Alert, SecurityRules
 from tui.charts import render_charts_dashboard
 
@@ -109,6 +109,33 @@ class FilterModal(ModalScreen):
 
     def action_apply(self) -> None:
         self._apply_filters()
+
+
+class ExportModal(ModalScreen):
+    """Export format selection modal."""
+
+    BINDINGS = [
+        ("escape", "close", "Close"),
+    ]
+
+    def compose(self) -> ComposeResult:
+        with Container(id="export-modal"):
+            yield Static("EXPORT REPORT", id="export-modal-title")
+            yield Static("Select export format:", id="export-modal-label")
+            with Horizontal(id="export-modal-buttons"):
+                yield Button("📄 Markdown", id="export-md", variant="primary")
+                yield Button("📋 JSON", id="export-json", variant="default")
+                yield Button("Both", id="export-both", variant="default")
+                yield Button("Cancel", id="export-cancel", variant="default")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id in ["export-md", "export-json", "export-both"]:
+            self.dismiss(event.button.id)
+        elif event.button.id == "export-cancel":
+            self.dismiss(None)
+
+    def action_close(self) -> None:
+        self.dismiss(None)
 
 
 class HelpModal(ModalScreen):
@@ -609,29 +636,76 @@ class LogInvestigatorApp(App):
             self._load_log_file()
 
     def action_export_report(self) -> None:
-        """Export report."""
+        """Export report with format selection."""
         if not self.stats:
             self.notify("No data to export", severity="warning")
             return
 
-        if self.log_path:
-            base_name = Path(self.log_path).stem
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_path = f"reports/{base_name}_report_{timestamp}.md"
-        else:
-            output_path = "reports/log_report.md"
+        def handle_export(format_choice: Optional[str]) -> None:
+            if not format_choice:
+                return
 
-        try:
-            export_markdown(
-                stats=self.stats,
-                filters=self.filter_engine.get_active_filters(),
-                alerts=self.security_rules.get_all_alerts(),
-                output_path=output_path,
-                entries=self.filtered_entries,
-            )
-            self.notify(f"Report exported: {output_path}")
-        except Exception as e:
-            self.notify(f"Export failed: {e}", severity="error")
+            # Generate file paths
+            if self.log_path:
+                base_name = Path(self.log_path).stem
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                md_path = f"reports/{base_name}_report_{timestamp}.md"
+                json_path = f"reports/{base_name}_report_{timestamp}.json"
+            else:
+                md_path = "reports/log_report.md"
+                json_path = "reports/log_report.json"
+
+            stats = self.stats
+            filters = self.filter_engine.get_active_filters()
+            alerts = self.security_rules.get_all_alerts()
+            entries = self.filtered_entries
+
+            try:
+                if format_choice == "export-md":
+                    # Markdown only
+                    export_markdown(
+                        stats=stats,
+                        filters=filters,
+                        alerts=alerts,
+                        output_path=md_path,
+                        entries=entries,
+                    )
+                    self.notify(f"📄 Markdown exported: {md_path}")
+
+                elif format_choice == "export-json":
+                    # JSON only
+                    export_json(
+                        stats=stats,
+                        filters=filters,
+                        alerts=alerts,
+                        output_path=json_path,
+                        entries=entries,
+                    )
+                    self.notify(f"📋 JSON exported: {json_path}")
+
+                elif format_choice == "export-both":
+                    # Both formats
+                    export_markdown(
+                        stats=stats,
+                        filters=filters,
+                        alerts=alerts,
+                        output_path=md_path,
+                        entries=entries,
+                    )
+                    export_json(
+                        stats=stats,
+                        filters=filters,
+                        alerts=alerts,
+                        output_path=json_path,
+                        entries=entries,
+                    )
+                    self.notify(f"✅ Both formats exported!")
+
+            except Exception as e:
+                self.notify(f"Export failed: {e}", severity="error")
+
+        # Show export modal
+        self.push_screen(ExportModal(), handle_export)
 
     def action_show_help(self) -> None:
         """Show help."""

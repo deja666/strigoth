@@ -48,7 +48,7 @@ python -m tui.app sample_logs/access.log
 
 ---
 
-## 🎨 Features (v0.5)
+## 🎨 Features (v0.6)
 
 ### Core Capabilities
 
@@ -60,7 +60,7 @@ python -m tui.app sample_logs/access.log
 * ✅ Rule-based anomaly detection
 * ✅ Real-time statistics dashboard
 * ✅ Security alerts panel
-* ✅ Export investigation reports (Markdown/JSON)
+* ✅ Export investigation reports (**Markdown & JSON**)
 * ✅ **Live log mode** (`tail -f` style) - Real-time monitoring
 * ✅ **Time-based charts** - Traffic visualization with sparklines
 * ✅ Terminal-only (TUI)
@@ -190,7 +190,26 @@ Multiple filters can be active simultaneously (AND logic).
 
 ## 📝 Export Report
 
-Generate comprehensive investigation reports in Markdown format.
+Generate comprehensive investigation reports in **Markdown** or **JSON** format.
+
+### Export Formats
+
+**Markdown (.md):**
+- Human-readable report
+- Formatted with headers, tables, and lists
+- Perfect for documentation and sharing
+
+**JSON (.json):**
+- Machine-readable format
+- Easy integration with other tools
+- Structured data for automation
+
+### Export Options
+
+Press `e` to open export dialog and choose:
+- 📄 **Markdown** - Standard text report
+- 📋 **JSON** - Structured data format
+- **Both** - Export both formats simultaneously
 
 ### Report Contents
 
@@ -202,14 +221,45 @@ Generate comprehensive investigation reports in Markdown format.
 * Security alerts (grouped by severity)
 * Status code distribution
 * HTTP method breakdown
-* Appendix with recent log entries
+* Recent log entries (last 20)
 
 ### Output Location
 
 Reports are saved to `reports/` directory with timestamped filenames:
 
 ```
-reports/access_log_report_20260324_143022.md
+reports/access_log_report_20260326_143022.md
+reports/access_log_report_20260326_143022.json
+```
+
+### Example JSON Output
+
+```json
+{
+  "generated_at": "2026-03-26T10:30:00",
+  "version": "v0.6",
+  "summary": {
+    "Total Requests": "1,234",
+    "Unique IPs": "45",
+    "Error Rate": "14.6%"
+  },
+  "alerts_summary": {
+    "total": 15,
+    "high": 3,
+    "medium": 7,
+    "low": 5
+  },
+  "top_ips": [
+    {"ip": "10.0.0.50", "count": 12},
+    {"ip": "192.168.1.100", "count": 8}
+  ],
+  "status_codes": {
+    "2xx": 750,
+    "3xx": 50,
+    "4xx": 300,
+    "5xx": 134
+  }
+}
 ```
 
 ---
@@ -228,14 +278,14 @@ The project includes a sample `access.log` with:
 
 ## 🗺️ Roadmap
 
-### ✅ v0.5 - COMPLETED
+### ✅ v0.6 - COMPLETED
 
 * [x] Nginx log parsing
 * [x] DataTable-based log viewer
 * [x] Filter engine with modal UI
 * [x] Statistics dashboard
 * [x] Security rule engine
-* [x] Markdown export
+* [x] **Markdown & JSON export**
 * [x] Keyboard-driven navigation
 * [x] Color-coded status codes
 * [x] **Live log mode** (`tail -f` style)
@@ -246,7 +296,6 @@ The project includes a sample `access.log` with:
 * [ ] Multi-log file support
 * [ ] Custom rule configuration (YAML)
 * [ ] Request rate visualization
-* [ ] JSON export format
 * [ ] Apache log parser
 * [ ] GeoIP lookup
 
@@ -292,7 +341,7 @@ Follows PEP 8 guidelines with type hints throughout the codebase.
 
 ## 🏁 Status
 
-✅ **v0.5 Complete** - Time-based Charts Added!
+✅ **v0.6 Complete** - JSON Export Added!
 
 Core features implemented:
 - Nginx parser with regex
@@ -300,11 +349,11 @@ Core features implemented:
 - Filter engine with modal UI
 - Statistics dashboard
 - Security rule engine (4 rules)
-- Markdown/JSON export
+- **Markdown & JSON export** with format selection dialog
 - Sample log file for testing
 - Color-coded status codes (2xx=green, 3xx=cyan, 4xx=yellow, 5xx=red)
 - Live log mode (`tail -f` style) with auto-refresh
-- **NEW**: Time-based charts with hourly traffic & error rate sparklines
+- Time-based charts with hourly traffic & error rate sparklines
 
 Next: Multi-log support and custom YAML configuration.
 

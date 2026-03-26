@@ -143,7 +143,7 @@ cython_debug/
 Thumbs.db
 
 # Project specific
-reports/*.md
+reports/
 *.log
 
 # Textual

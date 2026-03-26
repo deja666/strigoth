@@ -285,6 +285,42 @@ ModalScreen {
     text-align: center;
 }
 
+/* Export Modal */
+#export-modal {
+    align: center middle;
+    width: 70;
+    height: auto;
+    background: #0a0a0a;
+    border: thick #00b8ff;
+    padding: 1 2;
+}
+
+#export-modal-title {
+    background: #00b8ff;
+    color: #000000;
+    padding: 0 1;
+    margin: -1 -2 1 -2;
+    text-style: bold;
+    text-align: center;
+}
+
+#export-modal-label {
+    padding: 1;
+    text-align: center;
+    color: #00ff00;
+    margin: 1 0;
+}
+
+#export-modal-buttons {
+    margin-top: 1;
+    align: center middle;
+}
+
+#export-modal-buttons Button {
+    margin: 0 1;
+    min-width: 15;
+}
+
 #help-content {
     padding: 1;
     background: #111111;

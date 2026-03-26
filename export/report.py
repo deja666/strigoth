@@ -154,21 +154,23 @@ def export_json(
     filters: Dict[str, Any],
     alerts: List[Alert],
     output_path: str,
+    entries: Optional[List[LogEntry]] = None,
 ) -> str:
     """
     Generate a JSON investigation report.
-    
+
     Args:
         stats: Computed statistics summary
         filters: Active filters applied
         alerts: List of triggered security alerts
         output_path: Path to write the JSON file
-        
+        entries: Optional list of log entries for recent entries
+
     Returns:
         Path to the generated report file
     """
     import json
-    
+
     # Convert alerts to serializable format
     alerts_data = []
     for alert in alerts:
@@ -182,12 +184,20 @@ def export_json(
             "first_seen": alert.first_seen.isoformat() if alert.first_seen else None,
             "last_seen": alert.last_seen.isoformat() if alert.last_seen else None,
         })
-    
+
+    # Build report
     report = {
         "generated_at": datetime.now().isoformat(),
+        "version": "v0.6",
         "summary": stats.to_dict(),
         "filters": filters,
         "alerts": alerts_data,
+        "alerts_summary": {
+            "total": len(alerts),
+            "high": sum(1 for a in alerts if a.severity == "high"),
+            "medium": sum(1 for a in alerts if a.severity == "medium"),
+            "low": sum(1 for a in alerts if a.severity == "low"),
+        },
         "status_codes": {
             "2xx": stats.status_2xx,
             "3xx": stats.status_3xx,
@@ -195,14 +205,41 @@ def export_json(
             "5xx": stats.status_5xx,
         },
         "methods": stats.methods,
-        "top_ips": stats.top_ips,
-        "top_paths": stats.top_paths,
+        "top_ips": [
+            {"ip": ip, "count": count} for ip, count in stats.top_ips
+        ],
+        "top_paths": [
+            {"path": path, "count": count} for path, count in stats.top_paths
+        ],
     }
-    
+
+    # Add time range
+    if stats.time_range:
+        start, end = stats.time_range
+        report["time_range"] = {
+            "start": start.isoformat(),
+            "end": end.isoformat(),
+        }
+
+    # Add recent entries if provided
+    if entries:
+        recent_entries = []
+        for entry in entries[-20:]:  # Last 20 entries
+            recent_entries.append({
+                "time": entry.time.isoformat(),
+                "ip": entry.ip,
+                "method": entry.method,
+                "path": entry.path,
+                "status": entry.status,
+                "size": entry.size,
+            })
+        report["recent_entries"] = recent_entries
+
+    # Write to file
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
-    
+
     with open(output, "w", encoding="utf-8") as f:
-        json.dump(report, f, indent=2)
-        
+        json.dump(report, f, indent=2, ensure_ascii=False)
+
     return str(output)
