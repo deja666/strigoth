@@ -48,7 +48,7 @@ python -m tui.app sample_logs/access.log
 
 ---
 
-## 🎨 Features (v0.6)
+## 🎨 Features (v0.7)
 
 ### Core Capabilities
 
@@ -63,6 +63,7 @@ python -m tui.app sample_logs/access.log
 * ✅ Export investigation reports (**Markdown & JSON**)
 * ✅ **Live log mode** (`tail -f` style) - Real-time monitoring
 * ✅ **Time-based charts** - Traffic visualization with sparklines
+* ✅ **Custom YAML configuration** - Customize rules without coding
 * ✅ Terminal-only (TUI)
 
 ### Supported Logs
@@ -106,8 +107,9 @@ python -m tui.app sample_logs/access.log
 | `a`       | Toggle alerts panel       |
 | `t`       | Show charts view          |
 | `l`       | Toggle live mode (tail -f)|
+| `o`       | Open/reload config (YAML) |
 | `r`       | Reload log file           |
-| `e`       | Export report (markdown)  |
+| `e`       | Export report (MD/JSON)   |
 | `?`       | Show help                 |
 | `q`       | Quit application          |
 | `Enter`   | Select row                |
@@ -237,7 +239,7 @@ reports/access_log_report_20260326_143022.json
 ```json
 {
   "generated_at": "2026-03-26T10:30:00",
-  "version": "v0.6",
+  "version": "v0.7",
   "summary": {
     "Total Requests": "1,234",
     "Unique IPs": "45",
@@ -264,6 +266,93 @@ reports/access_log_report_20260326_143022.json
 
 ---
 
+## ⚙️ YAML Configuration
+
+Customize security rules and detection thresholds without modifying code.
+
+### Quick Start
+
+1. Edit `config.yaml` in the project root
+2. Save changes
+3. Press `o` in the app to reload config (or restart)
+
+### Configuration Options
+
+```yaml
+rules:
+  # Brute Force Detection
+  brute_force:
+    enabled: true           # Enable/disable rule
+    threshold: 10           # Failed attempts to trigger
+    time_window: 60         # Time window (seconds)
+  
+  # Sensitive Path Detection  
+  sensitive_path:
+    enabled: true
+    paths:                  # Custom paths list
+      - /admin
+      - /wp-admin
+      - /.env
+      - /custom-path        # Add your own
+  
+  # Scanning Detection
+  scanning:
+    enabled: true
+    threshold: 20           # Unique paths to trigger
+    time_window: 300        # Time window (5 min)
+  
+  # High Request Rate
+  high_rate:
+    enabled: true
+    threshold: 100          # Requests to trigger
+    time_window: 60         # Time window (1 min)
+```
+
+### Examples
+
+**Disable brute force detection:**
+```yaml
+brute_force:
+  enabled: false
+```
+
+**Add custom sensitive paths:**
+```yaml
+sensitive_path:
+  paths:
+    - /admin
+    - /my-secret-path
+    - /internal-api
+```
+
+**Make scanning detection stricter:**
+```yaml
+scanning:
+  threshold: 10      # Alert after 10 paths (default: 20)
+  time_window: 60    # Within 1 minute (default: 300)
+```
+
+**Make brute force more sensitive:**
+```yaml
+brute_force:
+  threshold: 5       # Alert after 5 attempts (default: 10)
+  time_window: 120   # Within 2 minutes (default: 60)
+```
+
+### Config File Location
+
+```
+strigoth/
+├── config.yaml          ← Edit this file
+├── tui/
+├── core/
+└── ...
+```
+
+Press **`o`** in the app to view config file path and reload.
+
+---
+
 ## 🧪 Testing with Sample Logs
 
 The project includes a sample `access.log` with:
@@ -278,7 +367,7 @@ The project includes a sample `access.log` with:
 
 ## 🗺️ Roadmap
 
-### ✅ v0.6 - COMPLETED
+### ✅ v0.7 - COMPLETED
 
 * [x] Nginx log parsing
 * [x] DataTable-based log viewer
@@ -290,11 +379,11 @@ The project includes a sample `access.log` with:
 * [x] Color-coded status codes
 * [x] **Live log mode** (`tail -f` style)
 * [x] **Time-based charts** - Traffic visualization
+* [x] **Custom YAML configuration**
 
 ### 🔮 Future Releases
 
 * [ ] Multi-log file support
-* [ ] Custom rule configuration (YAML)
 * [ ] Request rate visualization
 * [ ] Apache log parser
 * [ ] GeoIP lookup
@@ -341,7 +430,7 @@ Follows PEP 8 guidelines with type hints throughout the codebase.
 
 ## 🏁 Status
 
-✅ **v0.6 Complete** - JSON Export Added!
+✅ **v0.7 Complete** - YAML Configuration Added!
 
 Core features implemented:
 - Nginx parser with regex
@@ -354,8 +443,9 @@ Core features implemented:
 - Color-coded status codes (2xx=green, 3xx=cyan, 4xx=yellow, 5xx=red)
 - Live log mode (`tail -f` style) with auto-refresh
 - Time-based charts with hourly traffic & error rate sparklines
+- **NEW**: Custom YAML configuration for rules customization
 
-Next: Multi-log support and custom YAML configuration.
+Next: Multi-log support and request rate visualization.
 
 ---
 

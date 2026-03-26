@@ -5,6 +5,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 
 from core.models import LogEntry
+from core.config import get_config, Config
 
 
 @dataclass
@@ -20,56 +21,31 @@ class Alert:
     last_seen: Optional[datetime] = None
 
 
-@dataclass
-class RuleConfig:
-    """Configuration for a security rule."""
-    enabled: bool = True
-    threshold: int = 10
-    time_window: timedelta = field(default_factory=lambda: timedelta(minutes=1))
-
-
 class SecurityRules:
     """
     Rule-based security anomaly detection engine.
     
+    Uses YAML configuration for customizable thresholds.
+
     Detects suspicious patterns in log entries including:
     - Brute force attempts (excessive 401 responses)
     - Sensitive path access attempts
     - Scanning behavior (many unique paths from same IP)
     - High request rates
     """
-    
-    # Default thresholds
-    FAILED_LOGIN_THRESHOLD = 10
-    FAILED_LOGIN_WINDOW = timedelta(minutes=1)
-    
-    SCANNING_THRESHOLD = 20
-    SCANNING_WINDOW = timedelta(minutes=5)
-    
-    HIGH_RATE_THRESHOLD = 100
-    HIGH_RATE_WINDOW = timedelta(minutes=1)
-    
-    SENSITIVE_PATHS = [
-        "/admin",
-        "/wp-admin",
-        "/wp-login.php",
-        "/phpmyadmin",
-        "/pma",
-        "/.env",
-        "/.git",
-        "/config",
-        "/backup",
-        "/.htaccess",
-        "/wp-config.php",
-        "/xmlrpc.php",
-    ]
-    
-    def __init__(self) -> None:
+
+    def __init__(self, config: Optional[Config] = None) -> None:
+        """
+        Initialize security rules.
+        
+        Args:
+            config: Optional configuration object (uses global config if None)
+        """
+        self.config = config or get_config()
         self.alerts: List[Alert] = []
         self.failed_logins: Dict[str, List[datetime]] = defaultdict(list)
         self.path_access: Dict[str, Dict[str, List[datetime]]] = defaultdict(lambda: defaultdict(list))
         self.request_times: Dict[str, List[datetime]] = defaultdict(list)
-        self.config: Dict[str, RuleConfig] = {}
         
     def reset(self) -> None:
         """Reset all tracking data and alerts."""
@@ -108,24 +84,29 @@ class SecurityRules:
     def _check_brute_force(self, entry: LogEntry) -> List[Alert]:
         """
         Check for brute force login attempts.
-        
+
         Detects excessive 401 responses from a single IP.
         """
         alerts = []
         
+        # Check if rule is enabled
+        if not self.config.brute_force.enabled:
+            return alerts
+
         if entry.status == 401:
             self.failed_logins[entry.ip].append(entry.time)
-            
+
             # Clean old entries outside time window
-            cutoff = entry.time - self.FAILED_LOGIN_WINDOW
+            window = timedelta(seconds=self.config.brute_force.time_window)
+            cutoff = entry.time - window
             self.failed_logins[entry.ip] = [
                 t for t in self.failed_logins[entry.ip]
                 if t > cutoff
             ]
-            
+
             # Check if threshold exceeded
             recent_count = len(self.failed_logins[entry.ip])
-            if recent_count >= self.FAILED_LOGIN_THRESHOLD:
+            if recent_count >= self.config.brute_force.threshold:
                 alerts.append(Alert(
                     rule="brute_force",
                     severity="high",
@@ -135,17 +116,22 @@ class SecurityRules:
                     first_seen=min(self.failed_logins[entry.ip]),
                     last_seen=max(self.failed_logins[entry.ip]),
                 ))
-                
+
         return alerts
-        
+
     def _check_sensitive_path(self, entry: LogEntry) -> List[Alert]:
         """
         Check for access attempts to sensitive paths.
         """
         alerts = []
-        path_lower = entry.path.lower()
         
-        for sensitive_path in self.SENSITIVE_PATHS:
+        # Check if rule is enabled
+        if not self.config.sensitive_paths:
+            return alerts
+        
+        path_lower = entry.path.lower()
+
+        for sensitive_path in self.config.sensitive_paths:
             if sensitive_path.lower() in path_lower:
                 alerts.append(Alert(
                     rule="sensitive_path",
@@ -155,22 +141,27 @@ class SecurityRules:
                     path=entry.path,
                 ))
                 break
-                
+
         return alerts
         
     def _check_scanning(self, entry: LogEntry) -> List[Alert]:
         """
         Check for scanning behavior.
-        
+
         Detects IPs accessing many unique paths in short time.
         """
         alerts = []
         
+        # Check if rule is enabled
+        if not self.config.scanning.enabled:
+            return alerts
+
         # Track path access per IP
         self.path_access[entry.ip][entry.path].append(entry.time)
-        
+
         # Clean old entries
-        cutoff = entry.time - self.SCANNING_WINDOW
+        window = timedelta(seconds=self.config.scanning.time_window)
+        cutoff = entry.time - window
         for ip in list(self.path_access.keys()):
             for path in list(self.path_access[ip].keys()):
                 self.path_access[ip][path] = [
@@ -181,11 +172,11 @@ class SecurityRules:
                     del self.path_access[ip][path]
             if not self.path_access[ip]:
                 del self.path_access[ip]
-                
+
         # Count unique paths for this IP
         unique_paths = len(self.path_access[entry.ip])
-        
-        if unique_paths >= self.SCANNING_THRESHOLD:
+
+        if unique_paths >= self.config.scanning.threshold:
             alerts.append(Alert(
                 rule="scanning",
                 severity="medium",
@@ -193,29 +184,34 @@ class SecurityRules:
                 ip=entry.ip,
                 count=unique_paths,
             ))
-            
+
         return alerts
-        
+
     def _check_high_rate(self, entry: LogEntry) -> List[Alert]:
         """
         Check for high request rate.
-        
+
         Detects IPs with excessive requests in short time.
         """
         alerts = []
         
+        # Check if rule is enabled
+        if not self.config.high_rate.enabled:
+            return alerts
+
         self.request_times[entry.ip].append(entry.time)
-        
+
         # Clean old entries
-        cutoff = entry.time - self.HIGH_RATE_WINDOW
+        window = timedelta(seconds=self.config.high_rate.time_window)
+        cutoff = entry.time - window
         self.request_times[entry.ip] = [
             t for t in self.request_times[entry.ip]
             if t > cutoff
         ]
-        
+
         request_count = len(self.request_times[entry.ip])
-        
-        if request_count >= self.HIGH_RATE_THRESHOLD:
+
+        if request_count >= self.config.high_rate.threshold:
             alerts.append(Alert(
                 rule="high_rate",
                 severity="low",
@@ -223,7 +219,7 @@ class SecurityRules:
                 ip=entry.ip,
                 count=request_count,
             ))
-            
+
         return alerts
         
     def get_all_alerts(self) -> List[Alert]:

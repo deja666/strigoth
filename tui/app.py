@@ -30,6 +30,7 @@ from core.filter_engine import FilterEngine, FilterState
 from core.loader import LogLoader
 from core.models import LogEntry
 from core.stats import StatsEngine
+from core.config import get_config, reload_config
 from export.report import export_markdown, export_json
 from rules.security import Alert, SecurityRules
 from tui.charts import render_charts_dashboard
@@ -158,14 +159,18 @@ class HelpModal(ModalScreen):
                 "VIEW SWITCHING:\n"
                 "  s - Toggle info panel\n"
                 "  a - Show alerts (auto-scroll)\n"
+                "  t - Show charts\n"
                 "  TAB - Switch between panels\n"
                 "\n"
                 "LIVE MODE:\n"
-                "  L - Toggle live mode (tail -f style)\n"
+                "  l - Toggle live mode (tail -f style)\n"
+                "\n"
+                "CONFIG & EXPORT:\n"
+                "  o - Open/reload config (YAML)\n"
+                "  e - Export report (MD/JSON)\n"
+                "  r - Reload log file\n"
                 "\n"
                 "OTHER:\n"
-                "  r - Reload log\n"
-                "  e - Export report\n"
                 "  ? - Show this help\n"
                 "  q - Quit\n"
                 "\n"
@@ -199,6 +204,7 @@ class LogInvestigatorApp(App):
         ("t", "show_charts", "Charts"),
         ("r", "reload", "Reload"),
         ("e", "export_report", "Export"),
+        ("o", "open_config", "Config"),
         ("?", "show_help", "Help"),
         ("j", "scroll_down", "Down"),
         ("k", "scroll_up", "Up"),
@@ -634,6 +640,23 @@ class LogInvestigatorApp(App):
         """Reload log file."""
         if self.log_path:
             self._load_log_file()
+
+    def action_open_config(self) -> None:
+        """Open config file info."""
+        from pathlib import Path
+        import os
+        
+        config_path = Path("config.yaml").absolute()
+        
+        # Reload config
+        try:
+            reload_config()
+            self.notify(f"Config reloaded from: {config_path}")
+        except Exception as e:
+            self.notify(f"Config reload failed: {e}", severity="error")
+        
+        # Show config path
+        self.notify(f"Config file: {config_path}", timeout=5)
 
     def action_export_report(self) -> None:
         """Export report with format selection."""

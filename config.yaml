@@ -1,0 +1,82 @@
+# ═══════════════════════════════════════════════════════════════════════
+# Strigoth Log Investigator - Configuration
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Edit this file to customize security rules and detection thresholds.
+# After editing, restart the application or press 'o' to reload.
+#
+# ═══════════════════════════════════════════════════════════════════════
+
+rules:
+  # ─────────────────────────────────────────────────────────────────────
+  # Brute Force Detection
+  # ─────────────────────────────────────────────────────────────────────
+  # Detects excessive 401 (Unauthorized) responses from a single IP
+  brute_force:
+    enabled: true # Enable/disable this rule
+    threshold: 10 # Number of failed attempts to trigger alert
+    time_window: 60 # Time window in seconds (e.g., 60 = 1 minute)
+    description: "Detect brute force login attempts (401 responses)"
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Sensitive Path Detection
+  # ─────────────────────────────────────────────────────────────────────
+  # Detects access attempts to sensitive paths (admin panels, config files, etc.)
+  sensitive_path:
+    enabled: true # Enable/disable this rule
+    paths: # List of sensitive paths to monitor
+      - /admin
+      - /wp-admin
+      - /wp-login.php
+      - /phpmyadmin
+      - /pma
+      - /.env
+      - /.git
+      - /.htaccess
+      - /config
+      - /backup
+      - /wp-config.php
+      - /xmlrpc.php
+    description: "Detect access to sensitive paths"
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Scanning Detection
+  # ─────────────────────────────────────────────────────────────────────
+  # Detects IPs accessing many unique paths in a short time
+  scanning:
+    enabled: true # Enable/disable this rule
+    threshold: 20 # Number of unique paths to trigger alert
+    time_window: 300 # Time window in seconds (e.g., 300 = 5 minutes)
+    description: "Detect scanning behavior (many unique paths)"
+
+  # ─────────────────────────────────────────────────────────────────────
+  # High Request Rate Detection
+  # ─────────────────────────────────────────────────────────────────────
+  # Detects IPs with excessive requests in a short time
+  high_rate:
+    enabled: true # Enable/disable this rule
+    threshold: 100 # Number of requests to trigger alert
+    time_window: 60 # Time window in seconds (e.g., 60 = 1 minute)
+    description: "Detect high request rate"
+
+# ═══════════════════════════════════════════════════════════════════════
+# Examples
+# ═══════════════════════════════════════════════════════════════════════
+#
+# To disable brute force detection:
+#   brute_force:
+#     enabled: false
+#
+# To change sensitive paths:
+#   sensitive_path:
+#     paths:
+#       - /admin
+#       - /my-custom-path
+#       - /secret
+#
+# To make scanning detection more strict:
+#   scanning:
+#     threshold: 10      # Alert after only 10 unique paths
+#     time_window: 60    # Within 1 minute
+#
+# ═══════════════════════════════════════════════════════════════════════
