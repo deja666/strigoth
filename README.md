@@ -48,7 +48,7 @@ python -m tui.app sample_logs/access.log
 
 ---
 
-## 🎨 Features (v1.0)
+## 🎨 Features (v0.5)
 
 ### Core Capabilities
 
@@ -61,6 +61,8 @@ python -m tui.app sample_logs/access.log
 * ✅ Real-time statistics dashboard
 * ✅ Security alerts panel
 * ✅ Export investigation reports (Markdown/JSON)
+* ✅ **Live log mode** (`tail -f` style) - Real-time monitoring
+* ✅ **Time-based charts** - Traffic visualization with sparklines
 * ✅ Terminal-only (TUI)
 
 ### Supported Logs
@@ -102,6 +104,8 @@ python -m tui.app sample_logs/access.log
 | `/`       | Quick search              |
 | `s`       | Toggle statistics panel   |
 | `a`       | Toggle alerts panel       |
+| `t`       | Show charts view          |
+| `l`       | Toggle live mode (tail -f)|
 | `r`       | Reload log file           |
 | `e`       | Export report (markdown)  |
 | `?`       | Show help                 |
@@ -224,7 +228,7 @@ The project includes a sample `access.log` with:
 
 ## 🗺️ Roadmap
 
-### ✅ Roadmap 1 — MVP (v0.1-v0.2) - COMPLETED
+### ✅ v0.5 - COMPLETED
 
 * [x] Nginx log parsing
 * [x] DataTable-based log viewer
@@ -233,36 +237,18 @@ The project includes a sample `access.log` with:
 * [x] Security rule engine
 * [x] Markdown export
 * [x] Keyboard-driven navigation
+* [x] Color-coded status codes
+* [x] **Live log mode** (`tail -f` style)
+* [x] **Time-based charts** - Traffic visualization
 
-### ✅ Roadmap 2 — Usability (v0.3) - IN PROGRESS
+### 🔮 Future Releases
 
-* [x] Color highlighting by status code
-* [ ] Live log mode (`tail -f` style)
 * [ ] Multi-log file support
-* [ ] Improved navigation (page up/down)
 * [ ] Custom rule configuration (YAML)
-
-### 🔮 Roadmap 3 — Analysis (v0.4)
-
-* [ ] Time-based aggregation charts
 * [ ] Request rate visualization
 * [ ] JSON export format
-* [ ] Rule severity levels customization
-* [ ] Alert deduplication
-
-### 🔮 Roadmap 4 — Extensibility (v0.5)
-
 * [ ] Apache log parser
-* [ ] Custom log format support
-* [ ] Plugin system for rules
-* [ ] GeoIP lookup (offline DB)
-
-### 🔮 Roadmap 5 — Advanced (v1.0)
-
-* [ ] Session correlation
-* [ ] Threat scoring
-* [ ] CI-friendly CLI mode
-* [ ] Docker container support
+* [ ] GeoIP lookup
 
 ---
 
@@ -306,7 +292,7 @@ Follows PEP 8 guidelines with type hints throughout the codebase.
 
 ## 🏁 Status
 
-✅ **v0.3 Complete** - Color Highlighting Added!
+✅ **v0.5 Complete** - Time-based Charts Added!
 
 Core features implemented:
 - Nginx parser with regex
@@ -316,9 +302,11 @@ Core features implemented:
 - Security rule engine (4 rules)
 - Markdown/JSON export
 - Sample log file for testing
-- **NEW**: Color-coded status codes (2xx=green, 3xx=cyan, 4xx=yellow, 5xx=red)
+- Color-coded status codes (2xx=green, 3xx=cyan, 4xx=yellow, 5xx=red)
+- Live log mode (`tail -f` style) with auto-refresh
+- **NEW**: Time-based charts with hourly traffic & error rate sparklines
 
-Next: Live log mode and multi-log support.
+Next: Multi-log support and custom YAML configuration.
 
 ---
 

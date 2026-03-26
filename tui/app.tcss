@@ -39,19 +39,27 @@ FooterDescription {
 #main-container {
     layout: horizontal;
     height: 1fr;
+    padding: 0;
 }
 
 /* Left Panel - Log Viewer */
 #log-panel {
-    width: 2fr;
+    width: 1fr;
     height: 100%;
     background: #0a0a0a;
-    border: solid #333333;
+    border-right: solid #333333;
 }
 
 #log-table {
     height: 1fr;
     width: 100%;
+}
+
+/* Right Panel - Info */
+#info-panel {
+    width: 1fr;
+    height: 100%;
+    background: #050505;
 }
 
 DataTable {
@@ -94,7 +102,7 @@ DataTable > .datatable--hover {
 
 /* Right Panel - Info */
 #info-panel {
-    width: 1fr;
+    width: 45;
     height: 100%;
     background: #050505;
     border-left: solid #333333;
@@ -104,34 +112,32 @@ DataTable > .datatable--hover {
     height: 4;
     background: #1a1a2e;
     padding: 0 1;
+    align: center middle;
 }
 
 #info-tabs Button {
-    width: 1fr;
+    width: auto;
+    min-width: 10;
     height: 3;
     margin: 0 1;
 }
 
 #info-content {
-    height: auto;
-    padding: 1;
-    background: #0a0a0a;
-    min-width: 100%;
-}
-
-#info-scroll {
     height: 1fr;
+    background: #0a0a0a;
+    width: 100%;
+    padding: 0;
 }
 
-#info-scroll > .scrollable-container--scrollbar {
-    background: #000000;
-    color: #333333;
-    width: 2;
+RichLog {
+    scrollbar-gutter: stable;
+    width: 100%;
+    padding: 0 1;
 }
 
-#info-scroll > .scrollable-container--scrollbar:hover {
-    background: #111111;
-    color: #00ff00;
+RichLog > .rich-log--line {
+    width: 100%;
+    text-wrap: wrap;
 }
 
 /* Stats Content */

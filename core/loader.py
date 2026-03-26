@@ -1,5 +1,5 @@
 """Log file loader with streaming support."""
-from typing import List, Generator, Optional
+from typing import List, Generator, Optional, Tuple
 from pathlib import Path
 
 from core.models import LogEntry
@@ -9,129 +9,166 @@ from parser.nginx import parse_line
 class LogLoader:
     """
     Loader for nginx access log files.
-    
+
     Supports both streaming (generator-based) and
     batch loading of log entries.
     """
-    
+
     def __init__(self, filepath: Optional[str] = None) -> None:
         """
         Initialize the log loader.
-        
+
         Args:
             filepath: Path to the nginx access log file
         """
         self.filepath: Optional[Path] = None
         if filepath:
             self.filepath = Path(filepath)
-            
+
     def load(self, filepath: Optional[str] = None) -> List[LogEntry]:
         """
         Load all log entries from a file into memory.
-        
+
         Args:
             filepath: Path to the nginx access log file
-            
+
         Returns:
             List of all parsed log entries
-            
+
         Raises:
             FileNotFoundError: If the log file doesn't exist
             ValueError: If no filepath is provided
         """
         path = Path(filepath) if filepath else self.filepath
-        
+
         if not path:
             raise ValueError("No log file path specified")
-            
+
         if not path.exists():
             raise FileNotFoundError(f"Log file not found: {path}")
-            
+
         entries = []
         with open(path, "r", encoding="utf-8") as f:
             for line in f:
                 entry = parse_line(line)
                 if entry:
                     entries.append(entry)
-                    
+
         return entries
-        
+
     def stream(self, filepath: Optional[str] = None) -> Generator[LogEntry, None, None]:
         """
         Stream log entries from a file (memory-efficient).
-        
+
         Args:
             filepath: Path to the nginx access log file
-            
+
         Yields:
             Parsed LogEntry objects one at a time
-            
+
         Raises:
             FileNotFoundError: If the log file doesn't exist
             ValueError: If no filepath is provided
         """
         path = Path(filepath) if filepath else self.filepath
-        
+
         if not path:
             raise ValueError("No log file path specified")
-            
+
         if not path.exists():
             raise FileNotFoundError(f"Log file not found: {path}")
-            
+
         with open(path, "r", encoding="utf-8") as f:
             for line in f:
                 entry = parse_line(line)
                 if entry:
                     yield entry
-                    
+
+    def read_new_lines(self, last_position: int) -> Tuple[List[LogEntry], int]:
+        """
+        Read new lines from file starting at last_position.
+
+        Args:
+            last_position: Byte position to start reading from
+
+        Returns:
+            Tuple of (new_entries, new_position)
+
+        Raises:
+            FileNotFoundError: If the log file doesn't exist
+        """
+        if not self.filepath or not self.filepath.exists():
+            return [], last_position
+
+        current_size = self.filepath.stat().st_size
+
+        # File was truncated or rotated, reset position
+        if current_size < last_position:
+            last_position = 0
+
+        # No new data
+        if current_size == last_position:
+            return [], last_position
+
+        new_entries = []
+        with open(self.filepath, "r", encoding="utf-8") as f:
+            f.seek(last_position)
+            for line in f:
+                entry = parse_line(line)
+                if entry:
+                    new_entries.append(entry)
+
+        new_position = f.tell()
+        return new_entries, new_position
+
     def count(self, filepath: Optional[str] = None) -> int:
         """
         Count the number of parseable lines in a log file.
-        
+
         Args:
             filepath: Path to the nginx access log file
-            
+
         Returns:
             Number of parseable log entries
-            
+
         Raises:
             FileNotFoundError: If the log file doesn't exist
             ValueError: If no filepath is provided
         """
         path = Path(filepath) if filepath else self.filepath
-        
+
         if not path:
             raise ValueError("No log file path specified")
-            
+
         if not path.exists():
             raise FileNotFoundError(f"Log file not found: {path}")
-            
+
         count = 0
         with open(path, "r", encoding="utf-8") as f:
             for line in f:
                 if parse_line(line):
                     count += 1
-                    
+
         return count
-        
+
     def exists(self) -> bool:
         """
         Check if the configured log file exists.
-        
+
         Returns:
             True if the file exists, False otherwise
         """
         if not self.filepath:
             return False
         return self.filepath.exists()
-        
+
     def get_size(self) -> int:
         """
         Get the size of the log file in bytes.
-        
+
         Returns:
             File size in bytes
-            
+
         Raises:
             ValueError: If no filepath is configured
         """
