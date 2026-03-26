@@ -35,6 +35,9 @@ class StatsSummary:
     top_paths: List[tuple[str, int]] = field(default_factory=list)
     top_ips: List[tuple[str, int]] = field(default_factory=list)
     time_range: Optional[tuple[datetime, datetime]] = None
+    # Per-source statistics for multi-log support
+    sources: Dict[str, int] = field(default_factory=dict)  # source -> count
+    source_stats: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert stats to dictionary."""
@@ -107,7 +110,30 @@ class StatsEngine:
         time_range = None
         if times:
             time_range = (min(times), max(times))
-            
+
+        # Per-source statistics
+        sources = {}
+        source_stats = {}
+        for entry in self.entries:
+            source = entry.source_label or entry.source_file or "Unknown"
+            if source not in sources:
+                sources[source] = 0
+                source_stats[source] = {
+                    "count": 0,
+                    "errors": 0,
+                    "ips": set(),
+                }
+            sources[source] += 1
+            source_stats[source]["count"] += 1
+            if entry.status >= 400:
+                source_stats[source]["errors"] += 1
+            source_stats[source]["ips"].add(entry.ip)
+
+        # Convert sets to counts for serialization
+        for source in source_stats:
+            source_stats[source]["unique_ips"] = len(source_stats[source]["ips"])
+            del source_stats[source]["ips"]
+
         return StatsSummary(
             total_requests=total,
             unique_ips=len(unique_ips),
@@ -121,6 +147,8 @@ class StatsEngine:
             top_paths=top_paths,
             top_ips=top_ips,
             time_range=time_range,
+            sources=sources,
+            source_stats=source_stats,
         )
         
     def get_status_distribution(self) -> Dict[int, int]:

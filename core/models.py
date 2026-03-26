@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 
@@ -14,3 +14,5 @@ class LogEntry:
     referer: str
     agent: str
     raw: str = ""
+    source_file: str = ""  # Source file path for multi-log support
+    source_label: str = ""  # Human-readable source label (e.g., "Server1")

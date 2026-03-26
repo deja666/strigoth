@@ -6,7 +6,7 @@ No emojis, no scrollbars issues, working colors.
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 from rich.text import Text
 from textual.app import App, ComposeResult
@@ -27,7 +27,7 @@ from textual.widgets import (
 )
 
 from core.filter_engine import FilterEngine, FilterState
-from core.loader import LogLoader
+from core.loader import LogLoader, MultiLogLoader
 from core.models import LogEntry
 from core.stats import StatsEngine
 from core.config import get_config, reload_config
@@ -74,6 +74,12 @@ class FilterModal(ModalScreen):
                 value=self.current_filters.path or "",
                 id="filter-path",
             )
+            yield Label("Source:")
+            yield Input(
+                value=self.current_filters.source or "",
+                id="filter-source",
+                placeholder="e.g., access, server2",
+            )
             with Horizontal(id="filter-modal-buttons"):
                 yield Button("APPLY", id="apply", variant="primary")
                 yield Button("CLEAR", id="clear", variant="warning")
@@ -88,21 +94,24 @@ class FilterModal(ModalScreen):
             self.dismiss(None)
 
     def _apply_filters(self) -> None:
+        """Apply filters from modal."""
         status_input = self.query_one("#filter-status", Input).value
         method = self.query_one("#filter-method", Input).value
         ip = self.query_one("#filter-ip", Input).value
         path = self.query_one("#filter-path", Input).value
+        source = self.query_one("#filter-source", Input).value
 
         filters = FilterState(
             status=int(status_input) if status_input else None,
             method=method.upper() if method else None,
             ip=ip if ip else None,
             path=path if path else None,
+            source=source if source else None,
         )
         self.dismiss(filters)
 
     def _clear_filters(self) -> None:
-        for widget_id in ["filter-status", "filter-method", "filter-ip", "filter-path"]:
+        for widget_id in ["filter-status", "filter-method", "filter-ip", "filter-path", "filter-source"]:
             self.query_one(f"#{widget_id}", Input).value = ""
 
     def action_close(self) -> None:
@@ -222,10 +231,17 @@ class LogInvestigatorApp(App):
     live_mode = reactive(False)
     auto_scroll = reactive(True)
 
-    def __init__(self, log_path: Optional[str] = None) -> None:
+    def __init__(self, log_paths: Optional[List[str]] = None) -> None:
+        """
+        Initialize the application.
+
+        Args:
+            log_paths: List of log file paths (supports multiple files)
+        """
         super().__init__()
-        self.log_path = log_path
-        self.loader = LogLoader(log_path) if log_path else None
+        self.log_paths = log_paths or []
+        self.multi_loader = MultiLogLoader()
+        self.loader = None  # Legacy single-file loader
         self.entries: list[LogEntry] = []
         self.filtered_entries: list[LogEntry] = []
         self.filter_engine = FilterEngine()
@@ -234,6 +250,7 @@ class LogInvestigatorApp(App):
         self.stats = None
         self.file_position = 0  # For live mode tracking
         self._live_timer = None  # For periodic file checking
+        self.show_source_column = False  # Show source column when multiple files
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -254,36 +271,52 @@ class LogInvestigatorApp(App):
 
     def on_mount(self) -> None:
         """Initialize."""
-        # Setup DataTable
+        # Setup DataTable - columns will be added in _load_log_files
         table = self.query_one("#log-table", DataTable)
         table.cursor_type = "row"
         table.zebra_stripes = True
-        table.add_columns(
-            "Time",
-            "IP Address",
-            "Method",
-            "Path",
-            "Status",
-            "Size",
-        )
 
         # Load data
-        if self.log_path:
-            self._load_log_file()
+        if self.log_paths:
+            self._load_log_files()
         else:
-            self.notify("Usage: python -m tui.app <logfile>", severity="warning")
+            self.notify("Usage: python -m tui.app <logfile1> [logfile2] ...", severity="warning")
 
-    def _load_log_file(self) -> None:
-        """Load log file."""
-        if not self.loader:
-            return
-
+    def _load_log_files(self) -> None:
+        """Load log files (supports multiple files)."""
         try:
             table = self.query_one("#log-table", DataTable)
+            table.loading = True
 
-            self.entries = self.loader.load()
+            # Load all files
+            self.entries = self.multi_loader.load_files(self.log_paths)
 
-            # Process security
+            # Determine if we need source column
+            self.show_source_column = len(self.log_paths) > 1
+
+            # Clear and setup columns
+            table.clear(columns=True)  # Clear columns too
+            if self.show_source_column:
+                table.add_columns(
+                    "Time",
+                    "Source",
+                    "IP Address",
+                    "Method",
+                    "Path",
+                    "Status",
+                    "Size",
+                )
+            else:
+                table.add_columns(
+                    "Time",
+                    "IP Address",
+                    "Method",
+                    "Path",
+                    "Status",
+                    "Size",
+                )
+
+            # Process security rules
             self.security_rules.reset()
             for entry in self.entries:
                 self.security_rules.check(entry)
@@ -295,14 +328,14 @@ class LogInvestigatorApp(App):
             # Apply filters
             self._apply_filters()
 
-            # Set file position to end for live mode
-            if self.loader and self.loader.filepath:
-                self.file_position = self.loader.filepath.stat().st_size
+            table.loading = False
 
-            self.notify(f"Loaded {len(self.entries):,} entries")
+            file_count = self.multi_loader.get_file_count()
+            total_entries = self.multi_loader.get_total_count()
+            self.notify(f"Loaded {total_entries:,} entries from {file_count} file(s)")
 
-        except FileNotFoundError:
-            self.notify(f"File not found: {self.log_path}", severity="error")
+        except FileNotFoundError as e:
+            self.notify(f"File not found: {e}", severity="error")
         except Exception as e:
             self.notify(f"Error: {e}", severity="error")
 
@@ -392,14 +425,26 @@ class LogInvestigatorApp(App):
             # Create styled text for status column
             status_text = Text(str(status_code), style=f"bold {status_style}")
 
-            table.add_row(
-                time_str,
-                entry.ip,
-                entry.method,
-                entry.path,
-                status_text,
-                f"{entry.size:,}",
-            )
+            # Add source column if multiple files
+            if self.show_source_column:
+                table.add_row(
+                    time_str,
+                    entry.source_label,
+                    entry.ip,
+                    entry.method,
+                    entry.path,
+                    status_text,
+                    f"{entry.size:,}",
+                )
+            else:
+                table.add_row(
+                    time_str,
+                    entry.ip,
+                    entry.method,
+                    entry.path,
+                    status_text,
+                    f"{entry.size:,}",
+                )
 
     def _update_filter_display(self) -> None:
         """Update filter bar."""
@@ -637,9 +682,9 @@ class LogInvestigatorApp(App):
         self.notify("Charts view - traffic visualization")
 
     def action_reload(self) -> None:
-        """Reload log file."""
-        if self.log_path:
-            self._load_log_file()
+        """Reload log files."""
+        if self.log_paths:
+            self._load_log_files()
 
     def action_open_config(self) -> None:
         """Open config file info."""
@@ -769,8 +814,9 @@ class LogInvestigatorApp(App):
 
 def main() -> None:
     """Entry point."""
-    log_path = sys.argv[1] if len(sys.argv) > 1 else None
-    app = LogInvestigatorApp(log_path)
+    # Support multiple log files
+    log_paths = sys.argv[1:] if len(sys.argv) > 1 else []
+    app = LogInvestigatorApp(log_paths)
     app.run()
 
 

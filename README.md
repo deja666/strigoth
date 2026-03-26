@@ -2,7 +2,7 @@
 
 > Modern terminal UI for investigating web server logs with focus on **security analysis, anomaly detection, and fast filtering** — fully offline and developer-friendly.
 
-**Version:** v1.0
+**Version:** v0.8
 
 ---
 
@@ -48,15 +48,16 @@ python -m tui.app sample_logs/access.log
 
 ---
 
-## 🎨 Features (v0.7)
+## 🎨 Features (v0.8)
 
 ### Core Capabilities
 
 * ✅ Load large log files (stream-based)
+* ✅ **Multi-log file support** - Load & merge multiple log files
 * ✅ Parse structured fields (IP, timestamp, method, path, status, user-agent)
 * ✅ Interactive DataTable viewer with sorting
 * ✅ **Color-coded status codes** (2xx=green, 3xx=cyan, 4xx=yellow, 5xx=red)
-* ✅ Multi-criteria filtering (status, IP, method, path, search)
+* ✅ Multi-criteria filtering (status, IP, method, path, search, **source**)
 * ✅ Rule-based anomaly detection
 * ✅ Real-time statistics dashboard
 * ✅ Security alerts panel
@@ -181,12 +182,87 @@ strigoth/
 * **IP Address** - Substring match (e.g., `192.168`)
 * **HTTP Method** - Exact match (e.g., `GET`, `POST`, `PUT`)
 * **Path** - Substring match (e.g., `/admin`, `/api`)
+* **Source** - Substring match (e.g., `access`, `server2`) - **NEW in v0.8!**
 * **Search** - Full-text search across entire log line
 
 ### Filter Modal
 
 Press `f` to open the filter modal dialog with input fields for each filter type.
 Multiple filters can be active simultaneously (AND logic).
+
+### Multi-Log Filter Example
+
+When loading multiple log files:
+
+```bash
+python -m tui.app server1.log server2.log server3.log
+```
+
+1. Press `f` to open filter
+2. Enter `server2` in **Source** field
+3. Press Enter or click **APPLY**
+4. Only logs from `server2.log` are displayed
+
+Clear filters by pressing `f` and clicking **CLEAR**.
+
+---
+
+## 📂 Multi-Log Support (v0.8)
+
+Load and analyze multiple log files simultaneously with automatic merging and source tracking.
+
+### Usage
+
+```bash
+# Load multiple log files
+python -m tui.app server1.log server2.log server3.log
+
+# Mix of access logs from different servers
+python -m tui.app /var/log/nginx/server1.log /var/log/nginx/server2.log
+```
+
+### Features
+
+* **Auto-merge** - Logs from all files are merged and sorted by timestamp
+* **Source column** - Automatically shown when loading >1 file
+* **Source tracking** - Each entry knows which file it came from
+* **Filter by source** - Filter to show only logs from specific file
+* **Per-source stats** - Statistics breakdown per loaded file
+
+### DataTable Layout
+
+**Single file** (no source column):
+```
+┌────────────────────────────────────────────────────────┐
+│ Time    IP Address    Method  Path      Status  Size  │
+├────────────────────────────────────────────────────────┤
+│ 10:15   192.168.1.1   GET     /         200     5,432 │
+└────────────────────────────────────────────────────────┘
+```
+
+**Multiple files** (with source column):
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ Time    Source      IP Address    Method  Path    Status  Size  │
+├──────────────────────────────────────────────────────────────────┤
+│ 10:15   server1     192.168.1.1   GET     /       200     5,432 │
+│ 10:16   server2     10.0.0.50     POST    /login  401     123   │
+│ 10:17   server3     172.16.0.1    GET     /api    200     8,765 │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Sample Log Files
+
+The project includes sample logs for testing multi-log support:
+
+* `sample_logs/access.log` - Server 1 (81 entries, 10:15-10:16)
+* `sample_logs/server2.log` - Server 2 (40 entries, 11:00-11:00)
+* `sample_logs/server3.log` - Server 3 (40 entries, 12:00-12:00)
+
+Test multi-log with:
+```bash
+python -m tui.app sample_logs/access.log sample_logs/server2.log sample_logs/server3.log
+```
 
 ---
 
@@ -367,7 +443,7 @@ The project includes a sample `access.log` with:
 
 ## 🗺️ Roadmap
 
-### ✅ v0.7 - COMPLETED
+### ✅ v0.8 - COMPLETED
 
 * [x] Nginx log parsing
 * [x] DataTable-based log viewer
@@ -380,10 +456,10 @@ The project includes a sample `access.log` with:
 * [x] **Live log mode** (`tail -f` style)
 * [x] **Time-based charts** - Traffic visualization
 * [x] **Custom YAML configuration**
+* [x] **Multi-log file support** - Load & merge multiple files
 
 ### 🔮 Future Releases
 
-* [ ] Multi-log file support
 * [ ] Request rate visualization
 * [ ] Apache log parser
 * [ ] GeoIP lookup
@@ -430,22 +506,23 @@ Follows PEP 8 guidelines with type hints throughout the codebase.
 
 ## 🏁 Status
 
-✅ **v0.7 Complete** - YAML Configuration Added!
+✅ **v0.8 Complete** - Multi-Log Support Added!
 
 Core features implemented:
 - Nginx parser with regex
 - DataTable-based TUI viewer
-- Filter engine with modal UI
-- Statistics dashboard
-- Security rule engine (4 rules)
+- Filter engine with modal UI (now with **Source filter**)
+- Statistics dashboard (with per-source breakdown)
+- Security rule engine (4 rules, YAML configurable)
 - **Markdown & JSON export** with format selection dialog
-- Sample log file for testing
+- Sample log files for testing (3 sample logs)
 - Color-coded status codes (2xx=green, 3xx=cyan, 4xx=yellow, 5xx=red)
 - Live log mode (`tail -f` style) with auto-refresh
 - Time-based charts with hourly traffic & error rate sparklines
-- **NEW**: Custom YAML configuration for rules customization
+- Custom YAML configuration for rules customization
+- **NEW**: Multi-log file support with auto-merge & source tracking
 
-Next: Multi-log support and request rate visualization.
+Next: Request rate visualization and Apache log parser.
 
 ---
 
