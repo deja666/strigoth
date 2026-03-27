@@ -1,0 +1,434 @@
+{
+  "generated_at": "2026-03-26T14:02:13.880833",
+  "version": "v0.6",
+  "summary": {
+    "Total Requests": "81",
+    "Unique IPs": "39",
+    "Error Rate": "34.6%",
+    "2xx": "50",
+    "3xx": "3",
+    "4xx": "23",
+    "5xx": "5"
+  },
+  "filters": {},
+  "alerts": [
+    {
+      "rule": "brute_force",
+      "severity": "high",
+      "message": "Possible brute force from 10.0.0.50 (10 failed attempts)",
+      "ip": "10.0.0.50",
+      "path": null,
+      "count": 10,
+      "first_seen": "2026-03-24T10:15:36+00:00",
+      "last_seen": "2026-03-24T10:15:45+00:00"
+    },
+    {
+      "rule": "brute_force",
+      "severity": "high",
+      "message": "Possible brute force from 10.0.0.50 (11 failed attempts)",
+      "ip": "10.0.0.50",
+      "path": null,
+      "count": 11,
+      "first_seen": "2026-03-24T10:15:36+00:00",
+      "last_seen": "2026-03-24T10:15:46+00:00"
+    },
+    {
+      "rule": "brute_force",
+      "severity": "high",
+      "message": "Possible brute force from 10.0.0.50 (12 failed attempts)",
+      "ip": "10.0.0.50",
+      "path": null,
+      "count": 12,
+      "first_seen": "2026-03-24T10:15:36+00:00",
+      "last_seen": "2026-03-24T10:15:47+00:00"
+    },
+    {
+      "rule": "sensitive_path",
+      "severity": "medium",
+      "message": "Sensitive path access: /admin from 172.16.0.200",
+      "ip": "172.16.0.200",
+      "path": "/admin",
+      "count": 1,
+      "first_seen": null,
+      "last_seen": null
+    },
+    {
+      "rule": "sensitive_path",
+      "severity": "medium",
+      "message": "Sensitive path access: /wp-admin from 172.16.0.200",
+      "ip": "172.16.0.200",
+      "path": "/wp-admin",
+      "count": 1,
+      "first_seen": null,
+      "last_seen": null
+    },
+    {
+      "rule": "sensitive_path",
+      "severity": "medium",
+      "message": "Sensitive path access: /phpmyadmin from 172.16.0.200",
+      "ip": "172.16.0.200",
+      "path": "/phpmyadmin",
+      "count": 1,
+      "first_seen": null,
+      "last_seen": null
+    },
+    {
+      "rule": "sensitive_path",
+      "severity": "medium",
+      "message": "Sensitive path access: /.env from 172.16.0.200",
+      "ip": "172.16.0.200",
+      "path": "/.env",
+      "count": 1,
+      "first_seen": null,
+      "last_seen": null
+    },
+    {
+      "rule": "sensitive_path",
+      "severity": "medium",
+      "message": "Sensitive path access: /.git from 172.16.0.200",
+      "ip": "172.16.0.200",
+      "path": "/.git",
+      "count": 1,
+      "first_seen": null,
+      "last_seen": null
+    },
+    {
+      "rule": "scanning",
+      "severity": "medium",
+      "message": "Possible scanning from 10.0.0.100 (20 unique paths)",
+      "ip": "10.0.0.100",
+      "path": null,
+      "count": 20,
+      "first_seen": null,
+      "last_seen": null
+    },
+    {
+      "rule": "scanning",
+      "severity": "medium",
+      "message": "Possible scanning from 10.0.0.100 (21 unique paths)",
+      "ip": "10.0.0.100",
+      "path": null,
+      "count": 21,
+      "first_seen": null,
+      "last_seen": null
+    },
+    {
+      "rule": "scanning",
+      "severity": "medium",
+      "message": "Possible scanning from 10.0.0.100 (22 unique paths)",
+      "ip": "10.0.0.100",
+      "path": null,
+      "count": 22,
+      "first_seen": null,
+      "last_seen": null
+    },
+    {
+      "rule": "scanning",
+      "severity": "medium",
+      "message": "Possible scanning from 10.0.0.100 (23 unique paths)",
+      "ip": "10.0.0.100",
+      "path": null,
+      "count": 23,
+      "first_seen": null,
+      "last_seen": null
+    },
+    {
+      "rule": "scanning",
+      "severity": "medium",
+      "message": "Possible scanning from 10.0.0.100 (24 unique paths)",
+      "ip": "10.0.0.100",
+      "path": null,
+      "count": 24,
+      "first_seen": null,
+      "last_seen": null
+    },
+    {
+      "rule": "scanning",
+      "severity": "medium",
+      "message": "Possible scanning from 10.0.0.100 (25 unique paths)",
+      "ip": "10.0.0.100",
+      "path": null,
+      "count": 25,
+      "first_seen": null,
+      "last_seen": null
+    },
+    {
+      "rule": "scanning",
+      "severity": "medium",
+      "message": "Possible scanning from 10.0.0.100 (26 unique paths)",
+      "ip": "10.0.0.100",
+      "path": null,
+      "count": 26,
+      "first_seen": null,
+      "last_seen": null
+    }
+  ],
+  "alerts_summary": {
+    "total": 15,
+    "high": 3,
+    "medium": 12,
+    "low": 0
+  },
+  "status_codes": {
+    "2xx": 50,
+    "3xx": 3,
+    "4xx": 23,
+    "5xx": 5
+  },
+  "methods": {
+    "GET": 63,
+    "POST": 16,
+    "PUT": 1,
+    "DELETE": 1
+  },
+  "top_ips": [
+    {
+      "ip": "10.0.0.100",
+      "count": 26
+    },
+    {
+      "ip": "10.0.0.50",
+      "count": 12
+    },
+    {
+      "ip": "172.16.0.200",
+      "count": 5
+    },
+    {
+      "ip": "192.168.1.100",
+      "count": 3
+    },
+    {
+      "ip": "192.168.1.101",
+      "count": 1
+    },
+    {
+      "ip": "192.168.1.102",
+      "count": 1
+    },
+    {
+      "ip": "192.168.1.103",
+      "count": 1
+    },
+    {
+      "ip": "192.168.1.104",
+      "count": 1
+    },
+    {
+      "ip": "192.168.1.105",
+      "count": 1
+    },
+    {
+      "ip": "192.168.1.106",
+      "count": 1
+    }
+  ],
+  "top_paths": [
+    {
+      "path": "/login",
+      "count": 12
+    },
+    {
+      "path": "/",
+      "count": 2
+    },
+    {
+      "path": "/css/style.css",
+      "count": 1
+    },
+    {
+      "path": "/js/app.js",
+      "count": 1
+    },
+    {
+      "path": "/about",
+      "count": 1
+    },
+    {
+      "path": "/products",
+      "count": 1
+    },
+    {
+      "path": "/api/login",
+      "count": 1
+    },
+    {
+      "path": "/contact",
+      "count": 1
+    },
+    {
+      "path": "/blog",
+      "count": 1
+    },
+    {
+      "path": "/admin",
+      "count": 1
+    }
+  ],
+  "time_range": {
+    "start": "2026-03-24T10:15:30+00:00",
+    "end": "2026-03-24T10:16:50+00:00"
+  },
+  "recent_entries": [
+    {
+      "time": "2026-03-24T10:16:31+00:00",
+      "ip": "192.168.1.116",
+      "method": "GET",
+      "path": "/favicon.ico",
+      "status": 200,
+      "size": 1234
+    },
+    {
+      "time": "2026-03-24T10:16:32+00:00",
+      "ip": "192.168.1.117",
+      "method": "GET",
+      "path": "/robots.txt",
+      "status": 200,
+      "size": 234
+    },
+    {
+      "time": "2026-03-24T10:16:33+00:00",
+      "ip": "192.168.1.118",
+      "method": "GET",
+      "path": "/sitemap.xml",
+      "status": 200,
+      "size": 5678
+    },
+    {
+      "time": "2026-03-24T10:16:34+00:00",
+      "ip": "192.168.1.119",
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200,
+      "size": 56
+    },
+    {
+      "time": "2026-03-24T10:16:35+00:00",
+      "ip": "192.168.1.120",
+      "method": "GET",
+      "path": "/metrics",
+      "status": 200,
+      "size": 8901
+    },
+    {
+      "time": "2026-03-24T10:16:36+00:00",
+      "ip": "192.168.1.121",
+      "method": "GET",
+      "path": "/old-page",
+      "status": 301,
+      "size": 0
+    },
+    {
+      "time": "2026-03-24T10:16:37+00:00",
+      "ip": "192.168.1.122",
+      "method": "GET",
+      "path": "/redirect",
+      "status": 302,
+      "size": 0
+    },
+    {
+      "time": "2026-03-24T10:16:38+00:00",
+      "ip": "192.168.1.123",
+      "method": "GET",
+      "path": "/cached",
+      "status": 304,
+      "size": 0
+    },
+    {
+      "time": "2026-03-24T10:16:39+00:00",
+      "ip": "192.168.1.124",
+      "method": "GET",
+      "path": "/notfound",
+      "status": 404,
+      "size": 234
+    },
+    {
+      "time": "2026-03-24T10:16:40+00:00",
+      "ip": "192.168.1.125",
+      "method": "GET",
+      "path": "/missing",
+      "status": 404,
+      "size": 234
+    },
+    {
+      "time": "2026-03-24T10:16:41+00:00",
+      "ip": "192.168.1.126",
+      "method": "POST",
+      "path": "/api/data",
+      "status": 400,
+      "size": 345
+    },
+    {
+      "time": "2026-03-24T10:16:42+00:00",
+      "ip": "192.168.1.127",
+      "method": "POST",
+      "path": "/api/invalid",
+      "status": 422,
+      "size": 456
+    },
+    {
+      "time": "2026-03-24T10:16:43+00:00",
+      "ip": "192.168.1.128",
+      "method": "GET",
+      "path": "/forbidden",
+      "status": 403,
+      "size": 234
+    },
+    {
+      "time": "2026-03-24T10:16:44+00:00",
+      "ip": "192.168.1.129",
+      "method": "GET",
+      "path": "/unauthorized",
+      "status": 401,
+      "size": 123
+    },
+    {
+      "time": "2026-03-24T10:16:45+00:00",
+      "ip": "192.168.1.130",
+      "method": "GET",
+      "path": "/error",
+      "status": 500,
+      "size": 567
+    },
+    {
+      "time": "2026-03-24T10:16:46+00:00",
+      "ip": "192.168.1.131",
+      "method": "GET",
+      "path": "/crash",
+      "status": 502,
+      "size": 678
+    },
+    {
+      "time": "2026-03-24T10:16:47+00:00",
+      "ip": "192.168.1.132",
+      "method": "GET",
+      "path": "/timeout",
+      "status": 504,
+      "size": 789
+    },
+    {
+      "time": "2026-03-24T10:16:48+00:00",
+      "ip": "192.168.1.133",
+      "method": "GET",
+      "path": "/maintenance",
+      "status": 503,
+      "size": 890
+    },
+    {
+      "time": "2026-03-24T10:16:49+00:00",
+      "ip": "192.168.1.134",
+      "method": "GET",
+      "path": "/api/v2/users",
+      "status": 200,
+      "size": 4567
+    },
+    {
+      "time": "2026-03-24T10:16:50+00:00",
+      "ip": "192.168.1.135",
+      "method": "GET",
+      "path": "/api/v2/products",
+      "status": 200,
+      "size": 8901
+    }
+  ]
+}
