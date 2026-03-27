@@ -143,6 +143,7 @@ Thumbs.db
 
 # Project specific
 .github/*md
+docs/
 
 # Textual
 *.tcss.bak
