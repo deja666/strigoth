@@ -33,7 +33,7 @@ from core.stats import StatsEngine
 from core.config import get_config, reload_config
 from export.report import export_markdown, export_json
 from rules.security import Alert, SecurityRules
-from tui.charts import render_charts_dashboard
+from tui.charts import render_charts_dashboard, render_rate_dashboard
 
 
 class FilterModal(ModalScreen):
@@ -568,7 +568,7 @@ class LogInvestigatorApp(App):
         # Get error rate trend
         error_rates = self.stats_engine.get_error_rate_trend()
 
-        # Render charts
+        # Render original charts
         chart_text = render_charts_dashboard(
             hourly_traffic=hourly_data,
             error_rates=error_rates,
@@ -578,8 +578,28 @@ class LogInvestigatorApp(App):
             status_5xx=self.stats.status_5xx,
         )
 
-        # Write each line
+        # Write original charts
+        content.write("")
         for line in chart_text.split("\n"):
+            content.write(line)
+
+        # Get request rate data
+        minutely_rates = self.stats_engine.get_minutely_rates(limit=60)
+        peak_minutes = self.stats_engine.get_peak_minutes(top_n=5)
+        spikes = self.stats_engine.detect_traffic_spikes(threshold_multiplier=2.0)
+
+        # Render rate dashboard
+        content.write("")
+        content.write("─" * 50)
+        content.write("")
+        rate_text = render_rate_dashboard(
+            minutely_rates=minutely_rates,
+            peak_minutes=peak_minutes,
+            spikes=spikes,
+        )
+
+        # Write rate dashboard
+        for line in rate_text.split("\n"):
             content.write(line)
 
     def _update_status(self) -> None:

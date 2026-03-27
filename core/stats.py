@@ -21,6 +21,15 @@ class TimeBucket:
 
 
 @dataclass
+class RateBucket:
+    """Request rate for a single minute."""
+    timestamp: datetime
+    request_count: int = 0
+    error_count: int = 0
+    error_rate: float = 0.0
+
+
+@dataclass
 class StatsSummary:
     """Summary statistics for log analysis."""
     total_requests: int = 0
@@ -237,7 +246,7 @@ class StatsEngine:
             data = hourly_data[hour_key]
             data['count'] += 1
             data['ips'].add(entry.ip)
-            
+
             if 200 <= entry.status < 300:
                 data['2xx'] += 1
             elif 300 <= entry.status < 400:
@@ -266,6 +275,88 @@ class StatsEngine:
             ))
 
         return buckets
+
+    def get_minutely_rates(self, limit: int = 60) -> List[RateBucket]:
+        """
+        Get request rates grouped by minute.
+
+        Args:
+            limit: Maximum number of minutes to return (default: 60)
+
+        Returns:
+            List of RateBucket objects showing requests per minute
+        """
+        if not self.entries:
+            return []
+
+        # Group by minute
+        minute_data: Dict[str, Dict[str, int]] = defaultdict(lambda: {
+            'count': 0, 'errors': 0
+        })
+
+        for entry in self.entries:
+            if not entry.time:
+                continue
+            minute_key = entry.time.strftime("%Y-%m-%d %H:%M")
+            data = minute_data[minute_key]
+            data['count'] += 1
+            if entry.status >= 400:
+                data['errors'] += 1
+
+        # Convert to RateBucket list
+        buckets = []
+        for minute_key in sorted(minute_data.keys())[-limit:]:
+            data = minute_data[minute_key]
+            timestamp = datetime.strptime(minute_key, "%Y-%m-%d %H:%M")
+            error_rate = (data['errors'] / data['count'] * 100) if data['count'] > 0 else 0.0
+            buckets.append(RateBucket(
+                timestamp=timestamp,
+                request_count=data['count'],
+                error_count=data['errors'],
+                error_rate=error_rate,
+            ))
+
+        return buckets
+
+    def get_peak_minutes(self, top_n: int = 5) -> List[tuple[datetime, int]]:
+        """
+        Get top N minutes with highest request rates.
+
+        Args:
+            top_n: Number of peak minutes to return
+
+        Returns:
+            List of (timestamp, request_count) tuples
+        """
+        minutely = self.get_minutely_rates(limit=1000)
+        if not minutely:
+            return []
+
+        # Sort by request count descending
+        sorted_minutes = sorted(minutely, key=lambda b: b.request_count, reverse=True)
+        return [(b.timestamp, b.request_count) for b in sorted_minutes[:top_n]]
+
+    def detect_traffic_spikes(self, threshold_multiplier: float = 2.0) -> List[RateBucket]:
+        """
+        Detect traffic spikes (requests significantly above average).
+
+        Args:
+            threshold_multiplier: Multiplier above average to consider as spike
+
+        Returns:
+            List of RateBucket objects representing spikes
+        """
+        minutely = self.get_minutely_rates(limit=1000)
+        if not minutely:
+            return []
+
+        # Calculate average request rate
+        avg_rate = sum(b.request_count for b in minutely) / len(minutely)
+        threshold = avg_rate * threshold_multiplier
+
+        # Find spikes
+        spikes = [b for b in minutely if b.request_count > threshold]
+        return spikes
 
     def get_error_rate_trend(self, buckets: int = 24) -> List[float]:
         """

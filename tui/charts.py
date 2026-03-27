@@ -1,5 +1,5 @@
 """Chart rendering for terminal visualization."""
-from typing import List, Optional
+from typing import List, Optional, Any, Tuple
 from rich.text import Text
 
 
@@ -217,5 +217,67 @@ def render_charts_dashboard(
         "[bold]📋 STATUS CODE DISTRIBUTION[/]",
         render_status_distribution(status_2xx, status_3xx, status_4xx, status_5xx),
     ]
+
+    return "\n".join(lines)
+
+
+def render_rate_dashboard(
+    minutely_rates: List[Any],
+    peak_minutes: List[tuple[Any, int]],
+    spikes: List[Any],
+) -> str:
+    """
+    Render request rate visualization dashboard.
+
+    Args:
+        minutely_rates: List of RateBucket objects
+        peak_minutes: List of (timestamp, count) tuples
+        spikes: List of RateBucket objects representing spikes
+
+    Returns:
+        Rate dashboard string
+    """
+    lines = [
+        "[bold]⚡ REQUEST RATE (per minute)[/]",
+        "",
+    ]
+
+    # Render requests per minute as bar chart
+    if minutely_rates:
+        # Show last 30 minutes
+        recent = minutely_rates[-30:] if len(minutely_rates) > 30 else minutely_rates
+        max_count = max((b.request_count for b in recent), default=1)
+
+        for bucket in recent:
+            time_label = bucket.timestamp.strftime("%H:%M")
+            bar_len = int((bucket.request_count / max_count) * 40) if max_count > 0 else 0
+            bar = "█" * bar_len
+            error_indicator = " ⚠️" if bucket.error_rate > 50 else ""
+            lines.append(f"{time_label} │{bar} {bucket.request_count}{error_indicator}")
+
+        lines.append("")
+
+        # Summary stats
+        avg_rate = sum(b.request_count for b in minutely_rates) / len(minutely_rates) if minutely_rates else 0
+        max_rate = max((b.request_count for b in minutely_rates), default=0)
+        total_errors = sum(b.error_count for b in minutely_rates)
+
+        lines.append(f"[bold]Stats:[/] Avg: {avg_rate:.1f} req/min | Max: {max_rate} req/min | Total Errors: {total_errors}")
+
+        # Peak minutes
+        if peak_minutes:
+            lines.append("")
+            lines.append("[bold]🔝 Peak Minutes:[/]")
+            for ts, count in peak_minutes[:5]:
+                lines.append(f"  • {ts.strftime('%H:%M')} - {count} requests")
+
+        # Traffic spikes
+        if spikes:
+            lines.append("")
+            lines.append(f"[bold red]⚠️ Traffic Spikes Detected:[/] {len(spikes)}")
+            for spike in spikes[:5]:
+                lines.append(f"  • {spike.timestamp.strftime('%H:%M')} - {spike.request_count} requests ({spike.error_rate:.1f}% errors)")
+    else:
+        lines.append("No data available")
 
     return "\n".join(lines)

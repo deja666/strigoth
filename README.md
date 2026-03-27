@@ -47,7 +47,7 @@ python -m tui.app sample_logs/access.log
 
 ---
 
-## 🎨 Features (v0.9)
+## 🎨 Features (v0.10)
 
 ### Core Capabilities
 
@@ -64,6 +64,7 @@ python -m tui.app sample_logs/access.log
 * ✅ Export investigation reports (**Markdown & JSON**)
 * ✅ **Live log mode** (`tail -f` style) - Real-time monitoring
 * ✅ **Time-based charts** - Traffic visualization with sparklines
+* ✅ **Request rate visualization** - Requests per minute with spike detection
 * ✅ **Custom YAML configuration** - Customize rules without coding
 * ✅ Terminal-only (TUI)
 
@@ -450,7 +451,7 @@ The project includes a sample `access.log` with:
 
 ## 🗺️ Roadmap
 
-### ✅ v0.9 - COMPLETED
+### ✅ v0.10 - COMPLETED
 
 * [x] Nginx log parsing
 * [x] DataTable-based log viewer
@@ -465,10 +466,10 @@ The project includes a sample `access.log` with:
 * [x] **Custom YAML configuration**
 * [x] **Multi-log file support** - Load & merge multiple files
 * [x] **Apache log parser** - Auto-detect format
+* [x] **Request rate visualization** - Requests per minute with spike detection
 
 ### 🔮 Future Releases
 
-* [ ] Request rate visualization
 * [ ] GeoIP lookup
 
 ---
@@ -513,7 +514,7 @@ Follows PEP 8 guidelines with type hints throughout the codebase.
 
 ## 🏁 Status
 
-✅ **v0.9 Complete** - Apache Log Parser Added!
+✅ **v0.10 Complete** - Request Rate Visualization Added!
 
 Core features implemented:
 - Nginx parser with regex
@@ -528,10 +529,11 @@ Core features implemented:
 - Color-coded status codes (2xx=green, 3xx=cyan, 4xx=yellow, 5xx=red)
 - Live log mode (`tail -f` style) with auto-refresh
 - Time-based charts with hourly traffic & error rate sparklines
+- **NEW**: Request rate visualization with spike detection
 - Custom YAML configuration for rules customization
 - Multi-log file support with auto-merge & source tracking
 
-Next: Request rate visualization and GeoIP lookup.
+Next: Polish, stabilize, and prepare for v1.0.0 release!
 
 ---
 
