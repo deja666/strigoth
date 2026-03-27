@@ -9,44 +9,63 @@ import yaml
 
 @dataclass
 class RuleConfig:
-    """Configuration for a single rule."""
-
+    """Configuration for a single security rule.
+    
+    Attributes:
+        enabled: Whether the rule is enabled
+        threshold: Threshold value to trigger alert
+        time_window: Time window in seconds
+    """
     enabled: bool = True
     threshold: int = 10
-    time_window: int = 60  # seconds
+    time_window: int = 60
 
 
 @dataclass
 class Config:
-    """Application configuration."""
-
+    """Application configuration container.
+    
+    Attributes:
+        brute_force: Brute force detection configuration
+        sensitive_paths: List of sensitive paths to monitor
+        scanning: Scanning detection configuration
+        high_rate: High rate detection configuration
+    """
     brute_force: RuleConfig = field(default_factory=RuleConfig)
     sensitive_paths: List[str] = field(default_factory=list)
     scanning: RuleConfig = field(
         default_factory=lambda: RuleConfig(threshold=20, time_window=300)
     )
-    high_rate: RuleConfig = field(default_factory=lambda: RuleConfig(threshold=100))
-
-    # Default sensitive paths
-    DEFAULT_SENSITIVE_PATHS = [
-        "/admin",
-        "/wp-admin",
-        "/wp-login.php",
-        "/phpmyadmin",
-        "/pma",
-        "/.env",
-        "/.git",
-        "/.htaccess",
-        "/config",
-        "/backup",
-        "/wp-config.php",
-        "/xmlrpc.php",
-    ]
+    high_rate: RuleConfig = field(
+        default_factory=lambda: RuleConfig(threshold=100)
+    )
 
     def __post_init__(self) -> None:
         """Initialize default values."""
         if not self.sensitive_paths:
-            self.sensitive_paths = self.DEFAULT_SENSITIVE_PATHS.copy()
+            self.sensitive_paths = self._get_default_sensitive_paths().copy()
+    
+    @staticmethod
+    def _get_default_sensitive_paths() -> List[str]:
+        """Get default list of sensitive paths.
+        
+        Returns:
+            List of default sensitive path strings
+        """
+        return [
+            "/admin",
+            "/wp-admin",
+            "/wp-login.php",
+            "/phpmyadmin",
+            "/pma",
+            "/.env",
+            "/.git",
+            "/.htaccess",
+            "/config",
+            "/backup",
+            "/wp-config.php",
+            "/xmlrpc.php",
+        ]
 
 
 class ConfigLoader:
@@ -109,7 +128,7 @@ class ConfigLoader:
                 },
                 "sensitive_path": {
                     "enabled": True,
-                    "paths": Config.DEFAULT_SENSITIVE_PATHS.copy(),
+                    "paths": Config._get_default_sensitive_paths().copy(),
                     "description": "Detect access to sensitive paths",
                 },
                 "scanning": {
@@ -162,9 +181,9 @@ class ConfigLoader:
         if "sensitive_path" in rules:
             sp = rules["sensitive_path"]
             if sp.get("enabled", True):
-                paths = sp.get("paths", Config.DEFAULT_SENSITIVE_PATHS.copy())
+                paths = sp.get("paths", Config._get_default_sensitive_paths().copy())
                 self.config.sensitive_paths = (
-                    paths if paths else Config.DEFAULT_SENSITIVE_PATHS.copy()
+                    paths if paths else Config._get_default_sensitive_paths().copy()
                 )
             else:
                 self.config.sensitive_paths = []

@@ -1,16 +1,30 @@
-"""
-Strigoth Log Investigator TUI - Clean Professional Design
-No emojis, no scrollbars issues, working colors.
+"""Strigoth Log Investigator TUI - Main Application.
+
+A modern terminal user interface for investigating web server logs with
+focus on security analysis, anomaly detection, and fast filtering.
+
+Features:
+- Interactive DataTable viewer with sorting
+- Multi-criteria filtering (status, IP, method, path, source, search)
+- Rule-based anomaly detection (brute force, scanning, high rate)
+- Real-time statistics dashboard
+- Security alerts panel
+- Live log mode (tail -f style)
+- Time-based charts with sparklines
+- Request rate visualization
+- Markdown & JSON export
+- Custom YAML configuration
+- Multi-log file support
+- Auto-detect log format (Nginx/Apache)
 """
 
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List
+from typing import Any, Dict, List, Optional
 
 from rich.text import Text
 from textual.app import App, ComposeResult
-from textual.color import Color
 from textual.containers import Container, Horizontal, Vertical, VerticalScroll
 from textual.reactive import reactive
 from textual.screen import ModalScreen
@@ -21,30 +35,31 @@ from textual.widgets import (
     Header,
     Input,
     Label,
-    Placeholder,
     RichLog,
     Static,
 )
 
+from core.config import get_config, reload_config
 from core.filter_engine import FilterEngine, FilterState
 from core.loader import LogLoader, MultiLogLoader
 from core.models import LogEntry
 from core.stats import StatsEngine
-from core.config import get_config, reload_config
-from export.report import export_markdown, export_json
+from export.report import export_json, export_markdown
 from rules.security import Alert, SecurityRules
 from tui.charts import render_charts_dashboard, render_rate_dashboard
 
 
 class FilterModal(ModalScreen):
-    """Filter modal - clean design."""
+    """Modal dialog for setting log filters."""
 
-    BINDINGS = [
-        ("escape", "close", "Close"),
-        ("enter", "apply", "Apply"),
-    ]
+    BINDINGS = [("escape", "close", "Close"), ("enter", "apply", "Apply")]
 
     def __init__(self, current_filters: FilterState) -> None:
+        """Initialize filter modal.
+
+        Args:
+            current_filters: Current filter state to populate fields
+        """
         super().__init__()
         self.current_filters = current_filters
 
@@ -60,20 +75,11 @@ class FilterModal(ModalScreen):
                 type="integer",
             )
             yield Label("IP Address:")
-            yield Input(
-                value=self.current_filters.ip or "",
-                id="filter-ip",
-            )
+            yield Input(value=self.current_filters.ip or "", id="filter-ip")
             yield Label("HTTP Method:")
-            yield Input(
-                value=self.current_filters.method or "",
-                id="filter-method",
-            )
+            yield Input(value=self.current_filters.method or "", id="filter-method")
             yield Label("Path:")
-            yield Input(
-                value=self.current_filters.path or "",
-                id="filter-path",
-            )
+            yield Input(value=self.current_filters.path or "", id="filter-path")
             yield Label("Source:")
             yield Input(
                 value=self.current_filters.source or "",
@@ -111,7 +117,13 @@ class FilterModal(ModalScreen):
         self.dismiss(filters)
 
     def _clear_filters(self) -> None:
-        for widget_id in ["filter-status", "filter-method", "filter-ip", "filter-path", "filter-source"]:
+        for widget_id in [
+            "filter-status",
+            "filter-method",
+            "filter-ip",
+            "filter-path",
+            "filter-source",
+        ]:
             self.query_one(f"#{widget_id}", Input).value = ""
 
     def action_close(self) -> None:
@@ -122,11 +134,9 @@ class FilterModal(ModalScreen):
 
 
 class ExportModal(ModalScreen):
-    """Export format selection modal."""
+    """Modal dialog for selecting export format."""
 
-    BINDINGS = [
-        ("escape", "close", "Close"),
-    ]
+    BINDINGS = [("escape", "close", "Close")]
 
     def compose(self) -> ComposeResult:
         with Container(id="export-modal"):
@@ -149,11 +159,9 @@ class ExportModal(ModalScreen):
 
 
 class HelpModal(ModalScreen):
-    """Help modal - clean design."""
+    """Modal dialog showing keyboard shortcuts."""
 
-    BINDINGS = [
-        ("escape", "close", "Close"),
-    ]
+    BINDINGS = [("escape", "close", "Close")]
 
     def compose(self) -> ComposeResult:
         with Container(id="help-modal"):
@@ -223,17 +231,16 @@ class LogInvestigatorApp(App):
     ]
 
     TITLE = "STRIGOTH LOG INVESTIGATOR"
-    SUB_TITLE = "v1.0"
+    SUB_TITLE = "v1.0.0"
 
-    # State
+    # Reactive state
     show_stats = reactive(True)
     current_view = reactive("stats")  # "stats", "alerts", or "charts"
     live_mode = reactive(False)
     auto_scroll = reactive(True)
 
     def __init__(self, log_paths: Optional[List[str]] = None) -> None:
-        """
-        Initialize the application.
+        """Initialize the application.
 
         Args:
             log_paths: List of log file paths (supports multiple files)
@@ -241,16 +248,19 @@ class LogInvestigatorApp(App):
         super().__init__()
         self.log_paths = log_paths or []
         self.multi_loader = MultiLogLoader()
-        self.loader = None  # Legacy single-file loader
-        self.entries: list[LogEntry] = []
-        self.filtered_entries: list[LogEntry] = []
+        self.loader: Optional[LogLoader] = None
+        self.entries: List[LogEntry] = []
+        self.filtered_entries: List[LogEntry] = []
         self.filter_engine = FilterEngine()
         self.stats_engine = StatsEngine()
         self.security_rules = SecurityRules()
-        self.stats = None
+        self.stats: Optional[StatsSummary] = None
         self.file_position = 0  # For live mode tracking
-        self._live_timer = None  # For periodic file checking
+        self._live_timer: Any = None  # For periodic file checking
         self.show_source_column = False  # Show source column when multiple files
+        self._filter_cache: Optional[List[LogEntry]] = (
+            None  # Filter cache for performance
+        )
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -280,7 +290,9 @@ class LogInvestigatorApp(App):
         if self.log_paths:
             self._load_log_files()
         else:
-            self.notify("Usage: python -m tui.app <logfile1> [logfile2] ...", severity="warning")
+            self.notify(
+                "Usage: python -m tui.app <logfile1> [logfile2] ...", severity="warning"
+            )
 
     def _load_log_files(self) -> None:
         """Load log files (supports multiple files)."""
@@ -325,7 +337,8 @@ class LogInvestigatorApp(App):
             self.stats_engine.load(self.entries)
             self.stats = self.stats_engine.compute()
 
-            # Apply filters
+            # Invalidate cache and apply filters
+            self._invalidate_filter_cache()
             self._apply_filters()
 
             table.loading = False
@@ -391,60 +404,90 @@ class LogInvestigatorApp(App):
             # Silently ignore errors in live mode
             pass
 
+    def _invalidate_filter_cache(self) -> None:
+        """Invalidate filter cache when filters change."""
+        self._filter_cache = None
+        self.filter_cache_valid = False
+
     def _apply_filters(self) -> None:
-        """Apply filters."""
-        self.filtered_entries = self.filter_engine.apply(self.entries)
+        """Apply filters with caching for performance."""
+        # Check if cache is valid
+        if self._filter_cache is not None and self.filter_cache_valid:
+            self.filtered_entries = self._filter_cache
+        else:
+            # Re-compute filtered entries
+            self.filtered_entries = self.filter_engine.apply(self.entries)
+            self._filter_cache = self.filtered_entries
+            self.filter_cache_valid = True
+
         self._update_table()
         self._update_filter_display()
         self._update_info()
         self._update_status()
 
     def _update_table(self) -> None:
-        """Update DataTable with color-coded status."""
+        """Update DataTable with color-coded status (optimized for large datasets)."""
         table = self.query_one("#log-table", DataTable)
         table.clear()
 
-        for entry in self.filtered_entries:
+        # Optimize for large datasets - only render first 1000 rows
+        max_rows = 1000
+        entries_to_show = self.filtered_entries[:max_rows]
+
+        # Batch create row data for better performance
+        rows_data = []
+        for entry in entries_to_show:
             time_str = entry.time.strftime("%H:%M:%S")
 
             # Determine color based on status code
             status_code = entry.status
             if 200 <= status_code < 300:
-                # 2xx - Success (Green)
-                status_style = "#00ff00"
+                status_style = "green"
             elif 300 <= status_code < 400:
-                # 3xx - Redirect (Cyan)
-                status_style = "#00ffff"
+                status_style = "red"
             elif 400 <= status_code < 500:
-                # 4xx - Client Error (Yellow)
-                status_style = "#ffff00"
+                status_style = "yellow"
             else:
-                # 5xx - Server Error (Red)
-                status_style = "#ff0000"
+                status_style = "purple"
 
             # Create styled text for status column
             status_text = Text(str(status_code), style=f"bold {status_style}")
 
             # Add source column if multiple files
             if self.show_source_column:
-                table.add_row(
-                    time_str,
-                    entry.source_label,
-                    entry.ip,
-                    entry.method,
-                    entry.path,
-                    status_text,
-                    f"{entry.size:,}",
+                rows_data.append(
+                    (
+                        time_str,
+                        entry.source_label,
+                        entry.ip,
+                        entry.method,
+                        entry.path,
+                        status_text,
+                        f"{entry.size:,}",
+                    )
                 )
             else:
-                table.add_row(
-                    time_str,
-                    entry.ip,
-                    entry.method,
-                    entry.path,
-                    status_text,
-                    f"{entry.size:,}",
+                rows_data.append(
+                    (
+                        time_str,
+                        entry.ip,
+                        entry.method,
+                        entry.path,
+                        status_text,
+                        f"{entry.size:,}",
+                    )
                 )
+
+        # Batch add all rows at once for better performance
+        if rows_data:
+            table.add_rows(rows_data)
+
+        # Show warning if dataset is truncated
+        if len(self.filtered_entries) > max_rows:
+            self.notify(
+                f"Displaying first {max_rows} of {len(self.filtered_entries):,} entries",
+                timeout=3,
+            )
 
     def _update_filter_display(self) -> None:
         """Update filter bar."""
@@ -482,9 +525,9 @@ class LogInvestigatorApp(App):
         content.write(f"Error Rate: {self.stats.error_rate:.1f}%")
         content.write("")
         content.write(f"[green]2xx: {self.stats.status_2xx:,}[/]")
-        content.write(f"[cyan]3xx: {self.stats.status_3xx:,}[/]")
+        content.write(f"[red]3xx: {self.stats.status_3xx:,}[/]")
         content.write(f"[yellow]4xx: {self.stats.status_4xx:,}[/]")
-        content.write(f"[red]5xx: {self.stats.status_5xx:,}[/]")
+        content.write(f"[purple]5xx: {self.stats.status_5xx:,}[/]")
 
         if self.stats.time_range:
             start, end = self.stats.time_range
@@ -652,6 +695,7 @@ class LogInvestigatorApp(App):
         def handle_filters(filters: Optional[FilterState]) -> None:
             if filters is not None:
                 self.filter_engine.filters = filters
+                self._invalidate_filter_cache()
                 self._apply_filters()
 
         self.push_screen(FilterModal(self.filter_engine.filters), handle_filters)
@@ -659,6 +703,7 @@ class LogInvestigatorApp(App):
     def action_clear_filters(self) -> None:
         """Clear filters."""
         self.filter_engine.clear_filters()
+        self._invalidate_filter_cache()
         self._apply_filters()
         self.notify("Filters cleared")
 
@@ -670,13 +715,13 @@ class LogInvestigatorApp(App):
 
     def action_toggle_live(self) -> None:
         """Toggle live mode on/off."""
-        if not self.log_path:
+        if not self.log_paths:
             self.notify("No log file loaded", severity="warning")
             return
         self.live_mode = not self.live_mode
 
     def action_show_alerts(self) -> None:
-        """Switch to alerts view and focus."""
+        """Switch to alerts view."""
         self.current_view = "alerts"
         # Update button states
         stats_btn = self.query_one("#btn-stats", Button)
@@ -708,18 +753,15 @@ class LogInvestigatorApp(App):
 
     def action_open_config(self) -> None:
         """Open config file info."""
-        from pathlib import Path
-        import os
-        
         config_path = Path("config.yaml").absolute()
-        
+
         # Reload config
         try:
             reload_config()
             self.notify(f"Config reloaded from: {config_path}")
         except Exception as e:
             self.notify(f"Config reload failed: {e}", severity="error")
-        
+
         # Show config path
         self.notify(f"Config file: {config_path}", timeout=5)
 
@@ -734,8 +776,8 @@ class LogInvestigatorApp(App):
                 return
 
             # Generate file paths
-            if self.log_path:
-                base_name = Path(self.log_path).stem
+            if self.log_paths:
+                base_name = Path(self.log_paths[0]).stem
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 md_path = f"reports/{base_name}_report_{timestamp}.md"
                 json_path = f"reports/{base_name}_report_{timestamp}.json"
@@ -833,16 +875,14 @@ class LogInvestigatorApp(App):
 
 
 def main() -> None:
-    """Entry point."""
-    # Support multiple log files
+    """Entry point for the application."""
     log_paths = sys.argv[1:] if len(sys.argv) > 1 else []
     app = LogInvestigatorApp(log_paths)
     app.run()
 
 
 def make_app() -> LogInvestigatorApp:
-    """Create app instance for textual run."""
-    # For textual run without arguments
+    """Create app instance for textual run (development)."""
     return LogInvestigatorApp("sample_logs/access.log")
 
 

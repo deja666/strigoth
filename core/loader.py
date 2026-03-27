@@ -1,17 +1,29 @@
-"""Log file loader with streaming and multi-file support."""
-from typing import List, Generator, Optional, Tuple, Dict
-from pathlib import Path
+"""Log file loader with streaming and multi-file support.
+
+This module provides classes for loading and parsing web server access logs
+with support for multiple file formats (Nginx, Apache) and auto-detection.
+"""
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, Generator, List, Optional, Tuple
 
 from core.models import LogEntry
-from parser.nginx import parse_line as parse_nginx_line
 from parser.apache import parse_line as parse_apache_line
-from parser.detector import detect_file_format, LogFormat
+from parser.detector import LogFormat, detect_file_format
+from parser.nginx import parse_line as parse_nginx_line
 
 
 @dataclass
 class LoadedFile:
-    """Information about a loaded log file."""
+    """Information about a loaded log file.
+    
+    Attributes:
+        path: Path to the log file
+        label: Human-readable label for the file
+        entry_count: Number of log entries loaded
+        enabled: Whether the file is enabled for processing
+    """
     path: Path
     label: str
     entry_count: int
@@ -19,32 +31,34 @@ class LoadedFile:
 
 
 class LogLoader:
-    """
-    Loader for nginx access log files.
-
-    Supports both streaming (generator-based) and
-    batch loading of log entries.
+    """Loader for web server access log files.
+    
+    Supports both streaming (generator-based) and batch loading of log entries.
+    Auto-detects log format (Nginx or Apache).
+    
+    Attributes:
+        filepath: Path to the log file
     """
 
     def __init__(self, filepath: Optional[str] = None) -> None:
-        """
-        Initialize the log loader.
-
+        """Initialize the log loader.
+        
         Args:
-            filepath: Path to the nginx access log file
+            filepath: Path to the log file
         """
         self.filepath: Optional[Path] = None
         if filepath:
             self.filepath = Path(filepath)
 
-    def load(self, filepath: Optional[str] = None, source_label: str = "") -> List[LogEntry]:
-        """
-        Load all log entries from a file into memory.
+    def load(
+        self, filepath: Optional[str] = None, source_label: str = ""
+    ) -> List[LogEntry]:
+        """Load all log entries from a file into memory.
         
         Auto-detects log format (Nginx or Apache).
 
         Args:
-            filepath: Path to the nginx access log file
+            filepath: Path to the log file
             source_label: Optional label for the source file
 
         Returns:
@@ -64,14 +78,14 @@ class LogLoader:
 
         # Auto-detect format
         format_type = detect_file_format(str(path))
-        
+
         # Select parser based on format
         if format_type in [LogFormat.APACHE_COMBINED, LogFormat.APACHE_COMMON]:
             parse_line = parse_apache_line
         else:
             parse_line = parse_nginx_line  # Default to nginx
 
-        entries = []
+        entries: List[LogEntry] = []
         label = source_label or path.stem
         with open(path, "r", encoding="utf-8") as f:
             for line in f:
@@ -84,12 +98,13 @@ class LogLoader:
 
         return entries
 
-    def stream(self, filepath: Optional[str] = None) -> Generator[LogEntry, None, None]:
-        """
-        Stream log entries from a file (memory-efficient).
-
+    def stream(
+        self, filepath: Optional[str] = None
+    ) -> Generator[LogEntry, None, None]:
+        """Stream log entries from a file (memory-efficient).
+        
         Args:
-            filepath: Path to the nginx access log file
+            filepath: Path to the log file
 
         Yields:
             Parsed LogEntry objects one at a time
@@ -111,11 +126,25 @@ class LogLoader:
                 entry = parse_line(line)
                 if entry:
                     yield entry
+        path = Path(filepath) if filepath else self.filepath
 
-    def read_new_lines(self, last_position: int) -> Tuple[List[LogEntry], int]:
-        """
-        Read new lines from file starting at last_position.
+        if not path:
+            raise ValueError("No log file path specified")
 
+        if not path.exists():
+            raise FileNotFoundError(f"Log file not found: {path}")
+
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                entry = parse_line(line)
+                if entry:
+                    yield entry
+
+    def read_new_lines(
+        self, last_position: int
+    ) -> Tuple[List[LogEntry], int]:
+        """Read new lines from file starting at last_position.
+        
         Args:
             last_position: Byte position to start reading from
 
@@ -138,7 +167,7 @@ class LogLoader:
         if current_size == last_position:
             return [], last_position
 
-        new_entries = []
+        new_entries: List[LogEntry] = []
         with open(self.filepath, "r", encoding="utf-8") as f:
             f.seek(last_position)
             for line in f:
@@ -150,11 +179,10 @@ class LogLoader:
         return new_entries, new_position
 
     def count(self, filepath: Optional[str] = None) -> int:
-        """
-        Count the number of parseable lines in a log file.
-
+        """Count the number of parseable lines in a log file.
+        
         Args:
-            filepath: Path to the nginx access log file
+            filepath: Path to the log file
 
         Returns:
             Number of parseable log entries
@@ -180,9 +208,8 @@ class LogLoader:
         return count
 
     def exists(self) -> bool:
-        """
-        Check if the configured log file exists.
-
+        """Check if the configured log file exists.
+        
         Returns:
             True if the file exists, False otherwise
         """
@@ -191,9 +218,8 @@ class LogLoader:
         return self.filepath.exists()
 
     def get_size(self) -> int:
-        """
-        Get the size of the log file in bytes.
-
+        """Get the size of the log file in bytes.
+        
         Returns:
             File size in bytes
 
@@ -206,11 +232,14 @@ class LogLoader:
 
 
 class MultiLogLoader:
-    """
-    Loader for multiple nginx access log files.
-
+    """Loader for multiple web server access log files.
+    
     Supports loading, merging, and managing multiple log files
-    with source tracking.
+    with source tracking and auto-format detection.
+    
+    Attributes:
+        loaded_files: Dictionary of loaded file information
+        all_entries: Merged list of all log entries
     """
 
     def __init__(self) -> None:
@@ -218,10 +247,11 @@ class MultiLogLoader:
         self.loaded_files: Dict[str, LoadedFile] = {}
         self.all_entries: List[LogEntry] = []
 
-    def load_files(self, filepaths: List[str], labels: Optional[List[str]] = None) -> List[LogEntry]:
-        """
-        Load multiple log files and merge entries.
-
+    def load_files(
+        self, filepaths: List[str], labels: Optional[List[str]] = None
+    ) -> List[LogEntry]:
+        """Load multiple log files and merge entries.
+        
         Args:
             filepaths: List of file paths to load
             labels: Optional list of labels for each file
@@ -240,7 +270,7 @@ class MultiLogLoader:
                 continue
 
             label = labels[i] if i < len(labels) else path.stem
-            
+
             # Create loader with filepath set
             loader = LogLoader(filepath)
             entries = loader.load(filepath, label)
@@ -258,16 +288,20 @@ class MultiLogLoader:
 
         return self.all_entries
 
-    def add_file(self, filepath: str, label: Optional[str] = None) -> List[LogEntry]:
-        """
-        Add a single log file to existing entries.
-
+    def add_file(
+        self, filepath: str, label: Optional[str] = None
+    ) -> List[LogEntry]:
+        """Add a single log file to existing entries.
+        
         Args:
             filepath: Path to the log file
             label: Optional label for the file
 
         Returns:
             New entries from the added file
+
+        Raises:
+            FileNotFoundError: If the log file doesn't exist
         """
         path = Path(filepath)
         if not path.exists():
@@ -289,17 +323,14 @@ class MultiLogLoader:
         return entries
 
     def remove_file(self, filepath: str) -> None:
-        """
-        Remove a log file and its entries.
-
+        """Remove a log file and its entries.
+        
         Args:
             filepath: Path to the file to remove
         """
         path_str = str(Path(filepath))
         if path_str not in self.loaded_files:
             return
-
-        label = self.loaded_files[path_str].label
 
         # Remove entries from this file
         self.all_entries = [
@@ -310,9 +341,8 @@ class MultiLogLoader:
         del self.loaded_files[path_str]
 
     def get_entries_by_source(self, filepath: str) -> List[LogEntry]:
-        """
-        Get entries from a specific source file.
-
+        """Get entries from a specific source file.
+        
         Args:
             filepath: Path to the source file
 
@@ -323,36 +353,32 @@ class MultiLogLoader:
         return [e for e in self.all_entries if e.source_file == path_str]
 
     def get_all_entries(self) -> List[LogEntry]:
-        """
-        Get all merged log entries.
-
+        """Get all merged log entries.
+        
         Returns:
             List of all entries, sorted by timestamp
         """
         return self.all_entries
 
     def get_file_stats(self) -> List[LoadedFile]:
-        """
-        Get statistics for all loaded files.
-
+        """Get statistics for all loaded files.
+        
         Returns:
             List of LoadedFile objects
         """
         return list(self.loaded_files.values())
 
     def get_total_count(self) -> int:
-        """
-        Get total number of entries across all files.
-
+        """Get total number of entries across all files.
+        
         Returns:
             Total entry count
         """
         return len(self.all_entries)
 
     def get_file_count(self) -> int:
-        """
-        Get number of loaded files.
-
+        """Get number of loaded files.
+        
         Returns:
             Number of files
         """

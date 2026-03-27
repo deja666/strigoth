@@ -1,53 +1,57 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   STRIGOTH LOG INVESTIGATOR - Clean Dark Theme
-   Tested & Working Colors
+   Strigoth Log Investigator - Modern Dark Theme
+   Using Textual theme variables for consistency
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* Base */
+/* ───────────────────────────────────────────────────────────────────────
+   Base Theme
+   ─────────────────────────────────────────────────────────────────────── */
 Screen {
-    background: #000000;
+    background: $background;
 }
 
-/* Header */
+/* ───────────────────────────────────────────────────────────────────────
+   Header & Footer
+   ─────────────────────────────────────────────────────────────────────── */
 Header {
-    background: #1a1a2e;
-    color: #00ff00;
-    height: 3;
+    background: $primary-background;
+    color: $success;
 }
 
 Header > HeaderTitle {
-    background: #1a1a2e;
-    color: #00ff00;
-    text-style: bold;
+    background: $panel;
+    color: $success;
 }
 
-/* Footer */
 Footer {
-    background: #1a1a2e;
-    height: 3;
+    background: $primary-background;
 }
 
 FooterKey {
-    color: #00ff00;
+    color: $success;
 }
 
 FooterDescription {
-    color: #888888;
+    color: $text-muted;
 }
 
-/* Main Layout */
+/* ───────────────────────────────────────────────────────────────────────
+   Main Layout
+   ─────────────────────────────────────────────────────────────────────── */
 #main-container {
     layout: horizontal;
     height: 1fr;
-    padding: 0;
+    padding: 0 1;
 }
 
-/* Left Panel - Log Viewer */
+/* ───────────────────────────────────────────────────────────────────────
+   Left Panel - Log Viewer
+   ─────────────────────────────────────────────────────────────────────── */
 #log-panel {
-    width: 1fr;
+    width: 2fr;
     height: 100%;
-    background: #0a0a0a;
-    border-right: solid #333333;
+    background: $surface;
+    border-right: solid $primary-darken-2;
 }
 
 #log-table {
@@ -55,64 +59,19 @@ FooterDescription {
     width: 100%;
 }
 
-/* Right Panel - Info */
+/* ───────────────────────────────────────────────────────────────────────
+   Right Panel - Info
+   ─────────────────────────────────────────────────────────────────────── */
 #info-panel {
     width: 1fr;
     height: 100%;
-    background: #050505;
-}
-
-DataTable {
-    border: none;
-    background: #0a0a0a;
-}
-
-DataTable > .datatable--header {
-    background: #1a1a2e;
-    color: #00ff00;
-    text-style: bold;
-}
-
-DataTable > .datatable--cursor {
-    background: #1a1a2e;
-    color: #00ff00;
-}
-
-DataTable > .datatable--hover {
-    background: #111111;
-}
-
-/* Status Colors - Working */
-.status-2xx {
-    color: #00ff00;
-}
-
-.status-3xx {
-    color: #00ffff;
-}
-
-.status-4xx {
-    color: #ffff00;
-}
-
-.status-5xx {
-    color: #ff0000;
-    text-style: bold;
-}
-
-/* Right Panel - Info */
-#info-panel {
-    width: 45;
-    height: 100%;
-    background: #050505;
-    border-left: solid #333333;
+    background: $surface;
 }
 
 #info-tabs {
     height: 4;
-    background: #1a1a2e;
+    background: $surface-darken-1;
     padding: 0 1;
-    align: center middle;
 }
 
 #info-tabs Button {
@@ -124,139 +83,168 @@ DataTable > .datatable--hover {
 
 #info-content {
     height: 1fr;
-    background: #0a0a0a;
+    background: $surface;
     width: 100%;
-    padding: 0;
+    padding: 0 1;
 }
 
 RichLog {
     scrollbar-gutter: stable;
-    width: 100%;
-    padding: 0 1;
 }
 
-RichLog > .rich-log--line {
-    width: 100%;
-    text-wrap: wrap;
+/* ───────────────────────────────────────────────────────────────────────
+   Status Colors
+   ─────────────────────────────────────────────────────────────────────── */
+.status-2xx {
+    color: $success;
 }
 
-/* Stats Content */
-#stats-content {
-    color: #00ff00;
-    overflow-y: auto;
+.status-3xx {
+    color: $error-lighten-1 ;
 }
 
-/* Alerts Content */
-#alerts-content {
-    color: #ff0000;
-    overflow-y: auto;
+.status-4xx {
+    color: $warning;
 }
 
-/* Panels */
-.panel-title {
-    background: #1a1a2e;
-    color: #00ff00;
-    padding: 0 1;
+.status-5xx {
+    color: $error;
     text-style: bold;
-    text-align: center;
 }
 
-/* Stats Content */
-#stats-content {
-    padding: 1;
-    background: #0a0a0a;
-    color: #00ff00;
-}
-
-/* Alerts Content */
-#alerts-content {
-    padding: 1;
-    background: #0a0a0a;
-    color: #ff0000;
-}
-
-/* Status Bar */
-#status-bar {
-    height: 3;
-    background: #1a1a2e;
-    padding: 0 2;
-    content-align: left middle;
-    color: #888888;
-}
-
-/* Filter Display */
+/* ───────────────────────────────────────────────────────────────────────
+   Filter Display
+   ─────────────────────────────────────────────────────────────────────── */
 #filter-display {
-    height: 3;
-    background: #0a0a0a;
-    border: solid #333333;
+    height: 2;
+    background: $primary-background;
     padding: 0 1;
     content-align: left middle;
-    color: #00ff00;
+    color: $text-muted;
 }
 
-/* Buttons */
+/* ───────────────────────────────────────────────────────────────────────
+   Status Bar
+   ─────────────────────────────────────────────────────────────────────── */
+#status-bar {
+    height: 1;
+    background: $primary-darken-3;
+    padding: 0 1;
+    content-align: left middle;
+    color: $text-muted;
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   DataTable
+   ─────────────────────────────────────────────────────────────────────── */
+DataTable {
+    border: solid $primary;
+}
+
+DataTable > .datatable--header {
+    background: $primary-background;
+    color: $success;
+    text-style: bold;
+}
+
+DataTable > .datatable--cursor {
+    background: $primary;
+    color: $surface;
+}
+
+DataTable > .datatable--hover {
+    background: $primary-background-lighten-1;
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   Buttons
+   ─────────────────────────────────────────────────────────────────────── */
 Button {
     margin: 0 1;
 }
 
 Button.primary {
-    background: #00ff00;
-    color: #000000;
-    text-style: bold;
+    background: $success;
+    color: $background;
 }
 
 Button.warning {
-    background: #ffff00;
-    color: #000000;
+    background: $warning;
+    color: $background;
 }
 
 Button.default {
-    background: #333333;
-    color: #ffffff;
+    background: $primary-darken-2;
+    color: $text;
 }
 
-/* Inputs */
+/* ───────────────────────────────────────────────────────────────────────
+   Inputs
+   ─────────────────────────────────────────────────────────────────────── */
 Input {
-    border: solid #333333;
-    background: #0a0a0a;
-    color: #00ff00;
+    border: solid $primary-darken-2;
+    background: $surface;
+    color: $success;
 }
 
 Input:focus {
-    border: solid #00ff00;
-    background: #111111;
+    border: solid $success;
+    background: $surface-darken-2;
 }
 
-/* Modal Screens */
+Input.-valid {
+    border: solid $success;
+}
+
+Input.-invalid {
+    border: solid $error;
+    background: $error-darken-3;
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   Scrollable Containers
+   ─────────────────────────────────────────────────────────────────────── */
+ScrollableContainer {
+    scrollbar-color: $success;
+    scrollbar-background: $surface-darken-3;
+    scrollbar-color-hover: $accent;
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   Modal Screens
+   ─────────────────────────────────────────────────────────────────────── */
 ModalScreen {
-    background: #000000 70%;
+    background: $background 70%;
 }
 
-/* Filter Modal */
+/* ───────────────────────────────────────────────────────────────────────
+   Filter Modal
+   ─────────────────────────────────────────────────────────────────────── */
 #filter-modal {
     align: center middle;
     width: 60;
     height: auto;
-    background: #0a0a0a;
-    border: thick #00ff00;
+    background: $surface;
+    border: thick $success;
     padding: 1 2;
 }
 
 #filter-modal-title {
-    background: #00ff00;
-    color: #000000;
+    background: $success;
+    color: $background;
     padding: 0 1;
     margin: -1 -2 1 -2;
     text-style: bold;
     text-align: center;
 }
 
-#filter-modal Label {
-    color: #00ff00;
-    margin: 1 0 0 0;
+#filter-modal-container Label {
+    margin-top: 1;
+    margin-bottom: 0;
+    color: $success;
 }
 
-#filter-modal Input {
+#filter-modal-container Input {
     width: 100%;
     margin: 0 0 1 0;
 }
@@ -266,38 +254,25 @@ ModalScreen {
     align: center middle;
 }
 
-/* Help Modal */
-#help-modal {
-    align: center middle;
-    width: 70;
-    height: auto;
-    background: #0a0a0a;
-    border: thick #00ffff;
-    padding: 1 2;
+#filter-modal-buttons Button {
+    margin: 0 1;
 }
 
-#help-modal-title {
-    background: #00ffff;
-    color: #000000;
-    padding: 0 1;
-    margin: -1 -2 1 -2;
-    text-style: bold;
-    text-align: center;
-}
-
-/* Export Modal */
+/* ───────────────────────────────────────────────────────────────────────
+   Export Modal
+   ─────────────────────────────────────────────────────────────────────── */
 #export-modal {
     align: center middle;
-    width: 70;
+    width: 80;
     height: auto;
-    background: #0a0a0a;
-    border: thick #00b8ff;
+    background: $secondary-background;
+    border: thick skyblue;
     padding: 1 2;
 }
 
 #export-modal-title {
-    background: #00b8ff;
-    color: #000000;
+    background: skyblue;
+    color: $background;
     padding: 0 1;
     margin: -1 -2 1 -2;
     text-style: bold;
@@ -307,8 +282,7 @@ ModalScreen {
 #export-modal-label {
     padding: 1;
     text-align: center;
-    color: #00ff00;
-    margin: 1 0;
+    color: $success;
 }
 
 #export-modal-buttons {
@@ -318,33 +292,43 @@ ModalScreen {
 
 #export-modal-buttons Button {
     margin: 0 1;
-    min-width: 15;
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   Help Modal
+   ─────────────────────────────────────────────────────────────────────── */
+#help-modal {
+    align: center middle;
+    width: 70;
+    height: auto;
+    background: $surface;
+    border: thick $accent;
+    padding: 1 2;
+}
+
+#help-modal-title {
+    background: $accent;
+    color: $background;
+    padding: 0 1;
+    margin: -1 -2 1 -2;
+    text-style: bold;
+    text-align: center;
 }
 
 #help-content {
     padding: 1;
-    background: #111111;
-    color: #ffffff;
+    margin: 1 0;
+    background: $surface-darken-2;
+    color: $text;
 }
 
-/* Utility */
+#help-modal-container Button {
+    margin: 1 0 0 0;
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   Utility Classes
+   ─────────────────────────────────────────────────────────────────────── */
 .hidden {
     display: none;
-}
-
-/* Tabs for Info Panel */
-#tabs-container {
-    height: 4;
-    background: #1a1a2e;
-}
-
-#tabs-container Button {
-    width: 1fr;
-    height: 3;
-    margin: 0;
-}
-
-#tabs-container Button.active {
-    background: #00ff00;
-    color: #000000;
 }

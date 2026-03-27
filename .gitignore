@@ -142,7 +142,7 @@ cython_debug/
 Thumbs.db
 
 # Project specific
-
+.github/*md
 
 # Textual
 *.tcss.bak

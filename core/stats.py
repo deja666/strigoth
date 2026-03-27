@@ -1,15 +1,30 @@
-"""Statistics aggregation for log analysis."""
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, field
+"""Statistics aggregation engine for log analysis.
+
+This module provides classes for computing various statistics from log entries,
+including request counts, error rates, time-based aggregations, and request rate analysis.
+"""
 from collections import Counter, defaultdict
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 
 from core.models import LogEntry
 
 
 @dataclass
 class TimeBucket:
-    """Statistics for a single time bucket."""
+    """Statistics for a single time bucket (hourly aggregation).
+    
+    Attributes:
+        timestamp: Bucket timestamp
+        request_count: Total requests in bucket
+        error_count: Error requests (4xx, 5xx) in bucket
+        unique_ips: Number of unique IPs in bucket
+        status_2xx: Count of 2xx status codes
+        status_3xx: Count of 3xx status codes
+        status_4xx: Count of 4xx status codes
+        status_5xx: Count of 5xx status codes
+    """
     timestamp: datetime
     request_count: int = 0
     error_count: int = 0
@@ -22,7 +37,14 @@ class TimeBucket:
 
 @dataclass
 class RateBucket:
-    """Request rate for a single minute."""
+    """Request rate for a single minute.
+    
+    Attributes:
+        timestamp: Bucket timestamp
+        request_count: Total requests in minute
+        error_count: Error requests in minute
+        error_rate: Error rate percentage
+    """
     timestamp: datetime
     request_count: int = 0
     error_count: int = 0
@@ -31,7 +53,24 @@ class RateBucket:
 
 @dataclass
 class StatsSummary:
-    """Summary statistics for log analysis."""
+    """Summary statistics for log analysis.
+    
+    Attributes:
+        total_requests: Total number of requests
+        unique_ips: Number of unique IP addresses
+        error_count: Total error count (4xx, 5xx)
+        error_rate: Error rate percentage
+        status_2xx: Count of 2xx status codes
+        status_3xx: Count of 3xx status codes
+        status_4xx: Count of 4xx status codes
+        status_5xx: Count of 5xx status codes
+        methods: HTTP method counts
+        top_paths: Top requested paths
+        top_ips: Top IPs by request count
+        time_range: Time range of logs
+        sources: Per-source request counts
+        source_stats: Detailed per-source statistics
+    """
     total_requests: int = 0
     unique_ips: int = 0
     error_count: int = 0
@@ -41,15 +80,18 @@ class StatsSummary:
     status_4xx: int = 0
     status_5xx: int = 0
     methods: Dict[str, int] = field(default_factory=dict)
-    top_paths: List[tuple[str, int]] = field(default_factory=list)
-    top_ips: List[tuple[str, int]] = field(default_factory=list)
-    time_range: Optional[tuple[datetime, datetime]] = None
-    # Per-source statistics for multi-log support
-    sources: Dict[str, int] = field(default_factory=dict)  # source -> count
+    top_paths: List[Tuple[str, int]] = field(default_factory=list)
+    top_ips: List[Tuple[str, int]] = field(default_factory=list)
+    time_range: Optional[Tuple[datetime, datetime]] = None
+    sources: Dict[str, int] = field(default_factory=dict)
     source_stats: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert stats to dictionary."""
+        """Convert stats to dictionary for display.
+        
+        Returns:
+            Dictionary with formatted statistics
+        """
         return {
             "Total Requests": f"{self.total_requests:,}",
             "Unique IPs": f"{self.unique_ips:,}",
@@ -62,39 +104,40 @@ class StatsSummary:
 
 
 class StatsEngine:
-    """
-    Engine for computing statistics from log entries.
+    """Engine for computing statistics from log entries.
     
-    Provides aggregated metrics for log analysis including
-    request counts, error rates, and top contributors.
-    """
+    Provides aggregated metrics for log analysis including request counts,
+    error rates, top contributors, and time-based aggregations.
     
+    Attributes:
+        entries: List of log entries to analyze
+    """
+
     def __init__(self) -> None:
+        """Initialize the statistics engine."""
         self.entries: List[LogEntry] = []
-        
+
     def load(self, entries: List[LogEntry]) -> None:
-        """
-        Load log entries for analysis.
+        """Load log entries for analysis.
         
         Args:
             entries: List of log entries to analyze
         """
         self.entries = entries
-        
+
     def compute(self) -> StatsSummary:
-        """
-        Compute all statistics from loaded entries.
+        """Compute all statistics from loaded entries.
         
         Returns:
             StatsSummary with computed metrics
         """
         if not self.entries:
             return StatsSummary()
-            
+
         # Basic counts
         total = len(self.entries)
-        unique_ips = set(e.ip for e in self.entries)
-        
+        unique_ips = {e.ip for e in self.entries}
+
         # Status code breakdown
         status_codes = Counter(e.status for e in self.entries)
         status_2xx = sum(v for k, v in status_codes.items() if 200 <= k < 300)
@@ -102,27 +145,26 @@ class StatsEngine:
         status_4xx = sum(v for k, v in status_codes.items() if 400 <= k < 500)
         status_5xx = sum(v for k, v in status_codes.items() if 500 <= k < 600)
         error_count = status_4xx + status_5xx
-        
+
         # Methods
         methods = dict(Counter(e.method for e in self.entries))
-        
-        # Top paths
+
+        # Top paths and IPs
         path_counts = Counter(e.path for e in self.entries)
         top_paths = path_counts.most_common(10)
-        
-        # Top IPs
+
         ip_counts = Counter(e.ip for e in self.entries)
         top_ips = ip_counts.most_common(10)
-        
+
         # Time range
         times = [e.time for e in self.entries if e.time]
-        time_range = None
+        time_range: Optional[Tuple[datetime, datetime]] = None
         if times:
             time_range = (min(times), max(times))
 
         # Per-source statistics
-        sources = {}
-        source_stats = {}
+        sources: Dict[str, int] = {}
+        source_stats: Dict[str, Dict[str, Any]] = {}
         for entry in self.entries:
             source = entry.source_label or entry.source_file or "Unknown"
             if source not in sources:
@@ -161,60 +203,56 @@ class StatsEngine:
         )
         
     def get_status_distribution(self) -> Dict[int, int]:
-        """
-        Get distribution of status codes.
+        """Get distribution of status codes.
         
         Returns:
             Dictionary mapping status codes to counts
         """
         return dict(Counter(e.status for e in self.entries))
-        
-    def get_requests_by_ip(self, limit: int = 10) -> List[tuple[str, int]]:
-        """
-        Get top IPs by request count.
+
+    def get_requests_by_ip(self, limit: int = 10) -> List[Tuple[str, int]]:
+        """Get top IPs by request count.
         
         Args:
             limit: Maximum number of IPs to return
-            
+
         Returns:
             List of (IP, count) tuples
         """
         return Counter(e.ip for e in self.entries).most_common(limit)
-        
-    def get_requests_by_path(self, limit: int = 10) -> List[tuple[str, int]]:
-        """
-        Get top paths by request count.
+
+    def get_requests_by_path(
+        self, limit: int = 10
+    ) -> List[Tuple[str, int]]:
+        """Get top paths by request count.
         
         Args:
             limit: Maximum number of paths to return
-            
+
         Returns:
             List of (path, count) tuples
         """
         return Counter(e.path for e in self.entries).most_common(limit)
-        
+
     def get_requests_by_method(self) -> Dict[str, int]:
-        """
-        Get request count by HTTP method.
+        """Get request count by HTTP method.
         
         Returns:
             Dictionary mapping methods to counts
         """
         return dict(Counter(e.method for e in self.entries))
-        
+
     def get_error_entries(self) -> List[LogEntry]:
-        """
-        Get all entries with 4xx or 5xx status codes.
+        """Get all entries with 4xx or 5xx status codes.
         
         Returns:
             List of error log entries
         """
         return [e for e in self.entries if e.status >= 400]
-        
-    def get_entries_by_status(self, status: int) -> List[LogEntry]:
-        """
-        Get entries with a specific status code.
 
+    def get_entries_by_status(self, status: int) -> List[LogEntry]:
+        """Get entries with a specific status code.
+        
         Args:
             status: Status code to filter by
 
