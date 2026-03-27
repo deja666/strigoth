@@ -4,7 +4,9 @@ from pathlib import Path
 from dataclasses import dataclass
 
 from core.models import LogEntry
-from parser.nginx import parse_line
+from parser.nginx import parse_line as parse_nginx_line
+from parser.apache import parse_line as parse_apache_line
+from parser.detector import detect_file_format, LogFormat
 
 
 @dataclass
@@ -38,6 +40,8 @@ class LogLoader:
     def load(self, filepath: Optional[str] = None, source_label: str = "") -> List[LogEntry]:
         """
         Load all log entries from a file into memory.
+        
+        Auto-detects log format (Nginx or Apache).
 
         Args:
             filepath: Path to the nginx access log file
@@ -58,6 +62,15 @@ class LogLoader:
         if not path.exists():
             raise FileNotFoundError(f"Log file not found: {path}")
 
+        # Auto-detect format
+        format_type = detect_file_format(str(path))
+        
+        # Select parser based on format
+        if format_type in [LogFormat.APACHE_COMBINED, LogFormat.APACHE_COMMON]:
+            parse_line = parse_apache_line
+        else:
+            parse_line = parse_nginx_line  # Default to nginx
+
         entries = []
         label = source_label or path.stem
         with open(path, "r", encoding="utf-8") as f:
@@ -66,6 +79,7 @@ class LogLoader:
                 if entry:
                     entry.source_file = str(path)
                     entry.source_label = label
+                    entry.raw = line.strip()
                     entries.append(entry)
 
         return entries

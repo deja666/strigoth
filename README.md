@@ -15,7 +15,6 @@ Reading raw log files manually is time-consuming and error-prone.
 * 🚨 Detect suspicious patterns (bruteforce, scanning, anomalies)
 * 🎛️ Filter and analyze logs interactively with modal dialogs
 * 💻 Work fully offline without heavy stack (ELK / SIEM)
-* 🎨 Enjoy a beautiful cyberpunk-inspired dark theme
 
 ---
 
@@ -48,12 +47,13 @@ python -m tui.app sample_logs/access.log
 
 ---
 
-## 🎨 Features (v0.8)
+## 🎨 Features (v0.9)
 
 ### Core Capabilities
 
 * ✅ Load large log files (stream-based)
 * ✅ **Multi-log file support** - Load & merge multiple log files
+* ✅ **Auto-detect log format** (Nginx or Apache)
 * ✅ Parse structured fields (IP, timestamp, method, path, status, user-agent)
 * ✅ Interactive DataTable viewer with sorting
 * ✅ **Color-coded status codes** (2xx=green, 3xx=cyan, 4xx=yellow, 5xx=red)
@@ -70,6 +70,8 @@ python -m tui.app sample_logs/access.log
 ### Supported Logs
 
 * ✅ Nginx `access.log` (default format)
+* ✅ Apache `access.log` (Combined & Common formats)
+* ✅ **Auto-detection** - No manual format selection needed
 
 ---
 
@@ -149,14 +151,18 @@ strigoth/
 │   ├── __init__.py
 │   ├── models.py          # LogEntry dataclass
 │   ├── loader.py          # Log file loading (stream/batch)
+│   ├── config.py          # Configuration loader for YAML-based rule customization.
 │   ├── stats.py           # Statistics aggregation engine
 │   └── filter_engine.py   # Filter logic and state
 ├── parser/
 │   ├── __init__.py
 │   └── nginx.py           # Nginx log parser with regex
+│   └── apache.py          # Apache log parser with regex
+│   └── detector.py        # Log parser with regex auto-detection
 ├── rules/
 │   ├── __init__.py
 │   └── security.py        # Security rule engine
+├── reports/               # Generated Folder For Report File
 ├── export/
 │   ├── __init__.py
 │   └── report.py          # Markdown/JSON export
@@ -169,6 +175,7 @@ strigoth/
 ├── requirements.txt
 ├── run.py                 # Python entry point
 ├── run.bat                # Windows batch script
+├── config.yaml            # Configure YAML File
 └── README.md
 ```
 
@@ -443,7 +450,7 @@ The project includes a sample `access.log` with:
 
 ## 🗺️ Roadmap
 
-### ✅ v0.8 - COMPLETED
+### ✅ v0.9 - COMPLETED
 
 * [x] Nginx log parsing
 * [x] DataTable-based log viewer
@@ -457,11 +464,11 @@ The project includes a sample `access.log` with:
 * [x] **Time-based charts** - Traffic visualization
 * [x] **Custom YAML configuration**
 * [x] **Multi-log file support** - Load & merge multiple files
+* [x] **Apache log parser** - Auto-detect format
 
 ### 🔮 Future Releases
 
 * [ ] Request rate visualization
-* [ ] Apache log parser
 * [ ] GeoIP lookup
 
 ---
@@ -506,23 +513,25 @@ Follows PEP 8 guidelines with type hints throughout the codebase.
 
 ## 🏁 Status
 
-✅ **v0.8 Complete** - Multi-Log Support Added!
+✅ **v0.9 Complete** - Apache Log Parser Added!
 
 Core features implemented:
 - Nginx parser with regex
+- **Apache parser** (Combined & Common formats)
+- **Auto-detect log format** - No manual selection needed
 - DataTable-based TUI viewer
 - Filter engine with modal UI (now with **Source filter**)
 - Statistics dashboard (with per-source breakdown)
 - Security rule engine (4 rules, YAML configurable)
 - **Markdown & JSON export** with format selection dialog
-- Sample log files for testing (3 sample logs)
+- Sample log files for testing (Nginx + Apache samples)
 - Color-coded status codes (2xx=green, 3xx=cyan, 4xx=yellow, 5xx=red)
 - Live log mode (`tail -f` style) with auto-refresh
 - Time-based charts with hourly traffic & error rate sparklines
 - Custom YAML configuration for rules customization
-- **NEW**: Multi-log file support with auto-merge & source tracking
+- Multi-log file support with auto-merge & source tracking
 
-Next: Request rate visualization and Apache log parser.
+Next: Request rate visualization and GeoIP lookup.
 
 ---
 
