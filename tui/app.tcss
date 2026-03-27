@@ -14,13 +14,13 @@ Screen {
    Header & Footer
    ─────────────────────────────────────────────────────────────────────── */
 Header {
-    background: $primary-background;
+    background: $panel;
     color: $success;
 }
 
 Header > HeaderTitle {
     background: $panel;
-    color: $success;
+    color: $primary-lighten-3;
 }
 
 Footer {
@@ -51,7 +51,6 @@ FooterDescription {
     width: 2fr;
     height: 100%;
     background: $surface;
-    border-right: solid $primary-darken-2;
 }
 
 #log-table {
@@ -68,24 +67,35 @@ FooterDescription {
     background: $surface;
 }
 
-#info-tabs {
-    height: 4;
+TabbedContent {
+    height: 1fr;
+}
+
+TabbedContent > .tabbed-content--tab {
+    background: $surface;
+    color: $text-muted;
+}
+
+TabbedContent > .tabbed-content--tab:hover {
     background: $surface-darken-1;
-    padding: 0 1;
 }
 
-#info-tabs Button {
-    width: auto;
-    min-width: 10;
-    height: 3;
-    margin: 0 1;
+TabbedContent > .tabbed-content--tab--active {
+    background: $primary;
+    color: $success;
 }
 
-#info-content {
+TabPane {
     height: 1fr;
     background: $surface;
-    width: 100%;
+}
+
+#stats-content,
+#alerts-content,
+#charts-content {
+    height: 1fr;
     padding: 0 1;
+    background: $surface;
 }
 
 RichLog {
@@ -116,8 +126,8 @@ RichLog {
    Filter Display
    ─────────────────────────────────────────────────────────────────────── */
 #filter-display {
-    height: 2;
-    background: $primary-background;
+    height: 1;
+    background: $primary-darken-3;
     padding: 0 1;
     content-align: left middle;
     color: $text-muted;

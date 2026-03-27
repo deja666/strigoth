@@ -1,6 +1,8 @@
-# 🚀 STRIGOTH LOG INVESTIGATOR
+# 🧛‍♂️ _STRIGOTH_ 🦇
 
-> Modern terminal UI for investigating web server logs with focus on **security analysis, anomaly detection, and fast filtering** — fully offline and developer-friendly.
+> **Strigoth** derives its name from the **Strigoi**—the troubled, powerful vampires of Romanian mythology. Just as a **Strigoi** rises from the dark with supernatural senses to roam the night, Strigoth rises within your terminal to hunt through the dark, chaotic depths of system logs.!
+>
+>> Modern terminal UI for investigating web server logs with focus on **security analysis, anomaly detection, and fast filtering** — fully offline and developer-friendly.
 
 **Version:** v1.0.0
 
@@ -47,7 +49,7 @@ python -m tui.app sample_logs/access.log
 
 ---
 
-## 🎨 Features (v0.10)
+## 🎨 Features
 
 ### Core Capabilities
 
@@ -56,7 +58,7 @@ python -m tui.app sample_logs/access.log
 * ✅ **Auto-detect log format** (Nginx or Apache)
 * ✅ Parse structured fields (IP, timestamp, method, path, status, user-agent)
 * ✅ Interactive DataTable viewer with sorting
-* ✅ **Color-coded status codes** (2xx=green, 3xx=cyan, 4xx=yellow, 5xx=red)
+* ✅ **Color-coded status codes** (2xx=green, 3xx=red, 4xx=yellow, 5xx=purple)
 * ✅ Multi-criteria filtering (status, IP, method, path, search, **source**)
 * ✅ Rule-based anomaly detection
 * ✅ Real-time statistics dashboard
@@ -480,6 +482,8 @@ The project includes a sample `access.log` with:
 
 * Python 3.10+
 * textual >= 0.48.0
+* textual-dev>=1.0.0
+* pyyaml>=6.0
 
 ### Install Dependencies
 

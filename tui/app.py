@@ -21,11 +21,11 @@ Features:
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from rich.text import Text
 from textual.app import App, ComposeResult
-from textual.containers import Container, Horizontal, Vertical, VerticalScroll
+from textual.containers import Container, Horizontal, Vertical
 from textual.reactive import reactive
 from textual.screen import ModalScreen
 from textual.widgets import (
@@ -37,15 +37,17 @@ from textual.widgets import (
     Label,
     RichLog,
     Static,
+    TabbedContent,
+    TabPane,
 )
 
-from core.config import get_config, reload_config
+from core.config import reload_config
 from core.filter_engine import FilterEngine, FilterState
 from core.loader import LogLoader, MultiLogLoader
 from core.models import LogEntry
 from core.stats import StatsEngine
 from export.report import export_json, export_markdown
-from rules.security import Alert, SecurityRules
+from rules.security import SecurityRules
 from tui.charts import render_charts_dashboard, render_rate_dashboard
 
 
@@ -270,11 +272,13 @@ class LogInvestigatorApp(App):
             with Vertical(id="log-panel"):
                 yield DataTable(id="log-table")
             with Vertical(id="info-panel"):
-                with Horizontal(id="info-tabs"):
-                    yield Button("Stats", id="btn-stats", variant="primary")
-                    yield Button("Alerts", id="btn-alerts", variant="default")
-                    yield Button("Charts", id="btn-charts", variant="default")
-                yield RichLog(id="info-content", highlight=True, markup=True)
+                with TabbedContent(initial="stats"):
+                    with TabPane("📊 Stats", id="stats"):
+                        yield RichLog(id="stats-content", highlight=True, markup=True)
+                    with TabPane("🚨 Alerts", id="alerts"):
+                        yield RichLog(id="alerts-content", highlight=True, markup=True)
+                    with TabPane("📈 Charts", id="charts"):
+                        yield RichLog(id="charts-content", highlight=True, markup=True)
 
         yield Static("", id="status-bar")
         yield Footer()
@@ -501,15 +505,11 @@ class LogInvestigatorApp(App):
             display.update(" | ".join(parts))
 
     def _update_info(self) -> None:
-        """Update info panel based on current view."""
-        content = self.query_one("#info-content", RichLog)
-
-        if self.current_view == "stats":
-            self._update_stats(content)
-        elif self.current_view == "alerts":
-            self._update_alerts(content)
-        elif self.current_view == "charts":
-            self._update_charts(content)
+        """Update info panel based on active tab."""
+        # Update all tabs
+        self._update_stats(self.query_one("#stats-content", RichLog))
+        self._update_alerts(self.query_one("#alerts-content", RichLog))
+        self._update_charts(self.query_one("#charts-content", RichLog))
 
     def _update_stats(self, content: RichLog) -> None:
         """Update stats view."""
@@ -518,21 +518,21 @@ class LogInvestigatorApp(App):
             content.write("No data available")
             return
 
-        content.write("[bold green]STATISTICS[/]")
+        content.write("[bold]STATISTICS[/]")
         content.write("")
         content.write(f"Total: {self.stats.total_requests:,}")
         content.write(f"Unique IPs: {self.stats.unique_ips:,}")
         content.write(f"Error Rate: {self.stats.error_rate:.1f}%")
         content.write("")
-        content.write(f"[green]2xx: {self.stats.status_2xx:,}[/]")
-        content.write(f"[red]3xx: {self.stats.status_3xx:,}[/]")
-        content.write(f"[yellow]4xx: {self.stats.status_4xx:,}[/]")
-        content.write(f"[purple]5xx: {self.stats.status_5xx:,}[/]")
+        content.write(f"[green]2xx: {self.stats.status_2xx:,}[/green]")
+        content.write(f"[red]3xx: {self.stats.status_3xx:,}[/red]")
+        content.write(f"[yellow]4xx: {self.stats.status_4xx:,}[/yellow]")
+        content.write(f"[purple]5xx: {self.stats.status_5xx:,}[/purple]")
 
         if self.stats.time_range:
             start, end = self.stats.time_range
             content.write("")
-            content.write("[bold green]Time Range:[/]")
+            content.write("[bold]Time Range:[/]")
             content.write(
                 f"  {start.strftime('%H:%M:%S')} - {end.strftime('%H:%M:%S')}"
             )
@@ -543,7 +543,7 @@ class LogInvestigatorApp(App):
         alerts = self.security_rules.get_all_alerts()
 
         if not alerts:
-            content.write("[bold green]No security alerts detected[/]")
+            content.write("[green]No security alerts detected[/green]")
             return
 
         # Get summary
@@ -553,9 +553,9 @@ class LogInvestigatorApp(App):
 
         total_alerts = len(alerts)
 
-        content.write("[bold red]SECURITY ALERTS[/]")
+        content.write("[bold]SECURITY ALERTS[/]")
         content.write(
-            f"[yellow]Total: {total_alerts} | High: {high_count} | Medium: {medium_count} | Low: {low_count}[/]"
+            f"[yellow]Total: {total_alerts} | High: {high_count} | Medium: {medium_count} | Low: {low_count}[/yellow]"
         )
         content.write("")
         content.write("[dim]Use J/K to scroll[/]")
@@ -668,26 +668,10 @@ class LogInvestigatorApp(App):
             f"Alerts: {alerts_count}"
         )
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Handle tab button presses."""
-        if event.button.id == "btn-stats":
-            self.current_view = "stats"
-            self.query_one("#btn-stats", Button).variant = "primary"
-            self.query_one("#btn-alerts", Button).variant = "default"
-            self.query_one("#btn-charts", Button).variant = "default"
-            self._update_info()
-        elif event.button.id == "btn-alerts":
-            self.current_view = "alerts"
-            self.query_one("#btn-stats", Button).variant = "default"
-            self.query_one("#btn-alerts", Button).variant = "primary"
-            self.query_one("#btn-charts", Button).variant = "default"
-            self._update_info()
-        elif event.button.id == "btn-charts":
-            self.current_view = "charts"
-            self.query_one("#btn-stats", Button).variant = "default"
-            self.query_one("#btn-alerts", Button).variant = "default"
-            self.query_one("#btn-charts", Button).variant = "primary"
-            self._update_info()
+    def on_tab_changed(self, event: TabbedContent.TabActivated) -> None:
+        """Handle tab change event."""
+        # Optionally update content when tab changes
+        pass
 
     def action_open_filter(self) -> None:
         """Open filter modal."""
@@ -721,29 +705,13 @@ class LogInvestigatorApp(App):
         self.live_mode = not self.live_mode
 
     def action_show_alerts(self) -> None:
-        """Switch to alerts view."""
-        self.current_view = "alerts"
-        # Update button states
-        stats_btn = self.query_one("#btn-stats", Button)
-        alerts_btn = self.query_one("#btn-alerts", Button)
-        charts_btn = self.query_one("#btn-charts", Button)
-        stats_btn.variant = "default"
-        alerts_btn.variant = "primary"
-        charts_btn.variant = "default"
-        self._update_info()
+        """Switch to alerts tab."""
+        self.query_one(TabbedContent).active = "alerts"
         self.notify("Alerts view - press j/k to scroll")
 
     def action_show_charts(self) -> None:
-        """Switch to charts view."""
-        self.current_view = "charts"
-        # Update button states
-        stats_btn = self.query_one("#btn-stats", Button)
-        alerts_btn = self.query_one("#btn-alerts", Button)
-        charts_btn = self.query_one("#btn-charts", Button)
-        stats_btn.variant = "default"
-        alerts_btn.variant = "default"
-        charts_btn.variant = "primary"
-        self._update_info()
+        """Switch to charts tab."""
+        self.query_one(TabbedContent).active = "charts"
         self.notify("Charts view - traffic visualization")
 
     def action_reload(self) -> None:
