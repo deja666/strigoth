@@ -3,8 +3,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Custom Folder Ignore
+# Custom Folder & File Ignore
 .qwen/
+reports/
+TODO.md
+Row-Detail-Inspector.md
 
 # C extensions
 *.so
