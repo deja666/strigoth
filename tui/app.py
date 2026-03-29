@@ -25,7 +25,7 @@ from typing import Any, List, Optional
 
 from rich.text import Text
 from textual.app import App, ComposeResult
-from textual.containers import Container, Horizontal, Vertical
+from textual.containers import Container, Horizontal, ScrollableContainer, Vertical
 from textual.reactive import reactive
 from textual.screen import ModalScreen
 from textual.widgets import (
@@ -49,6 +49,7 @@ from core.stats import StatsEngine
 from export.report import export_json, export_markdown
 from rules.security import SecurityRules
 from tui.charts import render_charts_dashboard, render_rate_dashboard
+from tui.modals.log_detail import LogDetailModal
 
 
 class FilterModal(ModalScreen):
@@ -168,35 +169,36 @@ class HelpModal(ModalScreen):
     def compose(self) -> ComposeResult:
         with Container(id="help-modal"):
             yield Static("KEYBOARD SHORTCUTS", id="help-modal-title")
-            yield Static(
-                "NAVIGATION:\n"
-                "  f - Open filters\n"
-                "  c - Clear filters\n"
-                "  j/k - Scroll (focused panel)\n"
-                "  g/G - Top/Bottom of log\n"
-                "\n"
-                "VIEW SWITCHING:\n"
-                "  s - Toggle info panel\n"
-                "  a - Show alerts (auto-scroll)\n"
-                "  t - Show charts\n"
-                "  TAB - Switch between panels\n"
-                "\n"
-                "LIVE MODE:\n"
-                "  l - Toggle live mode (tail -f style)\n"
-                "\n"
-                "CONFIG & EXPORT:\n"
-                "  o - Open/reload config (YAML)\n"
-                "  e - Export report (MD/JSON)\n"
-                "  r - Reload log file\n"
-                "\n"
-                "OTHER:\n"
-                "  ? - Show this help\n"
-                "  q - Quit\n"
-                "\n"
-                "[dim]Tip: Press TAB to focus on different panels,[/]\n"
-                "[dim]then use j/k to scroll[/]",
-                id="help-content",
-            )
+            with ScrollableContainer(id="help-content"):
+                yield Static(
+                    "NAVIGATION:\n"
+                    "  f - Open filters\n"
+                    "  c - Clear filters\n"
+                    "  j/k - Scroll (focused panel)\n"
+                    "  g/G - Top/Bottom of log\n"
+                    "\n"
+                    "VIEW SWITCHING:\n"
+                    "  s - Toggle info panel\n"
+                    "  a - Show alerts (auto-scroll)\n"
+                    "  t - Show charts\n"
+                    "  TAB - Switch between panels\n"
+                    "\n"
+                    "LIVE MODE:\n"
+                    "  l - Toggle live mode (tail -f style)\n"
+                    "\n"
+                    "CONFIG & EXPORT:\n"
+                    "  o - Open/reload config (YAML)\n"
+                    "  e - Export report (MD/JSON)\n"
+                    "  r - Reload log file\n"
+                    "\n"
+                    "OTHER:\n"
+                    "  ? - Show this help\n"
+                    "  q - Quit\n"
+                    "\n"
+                    "[dim]Tip: Press TAB to focus on different panels,[/]\n"
+                    "[dim]then use j/k to scroll[/]",
+                    id="help-content",
+                )
             yield Button("CLOSE", id="close", variant="primary")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -347,6 +349,9 @@ class LogInvestigatorApp(App):
 
             table.loading = False
 
+            # Focus the table so Enter key works immediately
+            table.focus()
+
             file_count = self.multi_loader.get_file_count()
             total_entries = self.multi_loader.get_total_count()
             self.notify(f"Loaded {total_entries:,} entries from {file_count} file(s)")
@@ -355,6 +360,25 @@ class LogInvestigatorApp(App):
             self.notify(f"File not found: {e}", severity="error")
         except Exception as e:
             self.notify(f"Error: {e}", severity="error")
+
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Handle DataTable row selection (Enter key press).
+
+        Args:
+            event: RowSelected event from DataTable
+        """
+        # Get the row key from the event
+        row_key = event.row_key
+
+        # Convert to string and extract index
+        row_key_str = str(row_key.value)
+        if row_key_str.startswith("row_"):
+            idx = int(row_key_str.split("_")[1])
+
+            # Check bounds and show modal
+            if 0 <= idx < len(self.filtered_entries):
+                log_entry = self.filtered_entries[idx]
+                self.push_screen(LogDetailModal(log_entry))
 
     def watch_live_mode(self, live: bool) -> None:
         """Handle live mode state changes."""
@@ -438,13 +462,11 @@ class LogInvestigatorApp(App):
         max_rows = 1000
         entries_to_show = self.filtered_entries[:max_rows]
 
-        # Batch create row data for better performance
-        rows_data = []
-        for entry in entries_to_show:
+        # Add rows with keys for later retrieval
+        for idx, entry in enumerate(entries_to_show):
             time_str = entry.time.strftime("%H:%M:%S")
-
-            # Determine color based on status code
             status_code = entry.status
+
             if 200 <= status_code < 300:
                 status_style = "green"
             elif 300 <= status_code < 400:
@@ -454,37 +476,30 @@ class LogInvestigatorApp(App):
             else:
                 status_style = "purple"
 
-            # Create styled text for status column
             status_text = Text(str(status_code), style=f"bold {status_style}")
+            row_key = f"row_{idx}"
 
-            # Add source column if multiple files
             if self.show_source_column:
-                rows_data.append(
-                    (
-                        time_str,
-                        entry.source_label,
-                        entry.ip,
-                        entry.method,
-                        entry.path,
-                        status_text,
-                        f"{entry.size:,}",
-                    )
+                table.add_row(
+                    time_str,
+                    entry.source_label,
+                    entry.ip,
+                    entry.method,
+                    entry.path,
+                    status_text,
+                    f"{entry.size:,}",
+                    key=row_key,
                 )
             else:
-                rows_data.append(
-                    (
-                        time_str,
-                        entry.ip,
-                        entry.method,
-                        entry.path,
-                        status_text,
-                        f"{entry.size:,}",
-                    )
+                table.add_row(
+                    time_str,
+                    entry.ip,
+                    entry.method,
+                    entry.path,
+                    status_text,
+                    f"{entry.size:,}",
+                    key=row_key,
                 )
-
-        # Batch add all rows at once for better performance
-        if rows_data:
-            table.add_rows(rows_data)
 
         # Show warning if dataset is truncated
         if len(self.filtered_entries) > max_rows:

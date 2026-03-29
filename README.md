@@ -4,8 +4,6 @@
 >
 >> Modern terminal UI for investigating web server logs with focus on **security analysis, anomaly detection, and fast filtering** — fully offline and developer-friendly.
 
-**Version:** v1.0.0
-
 ---
 
 ## 🎯 Purpose
@@ -170,6 +168,7 @@ strigoth/
 │   ├── __init__.py
 │   └── report.py          # Markdown/JSON export
 ├── tui/
+│   ├── modals/            # Modals Textual TUI
 │   ├── __init__.py
 │   ├── app.py             # Main Textual TUI application
 │   └── app.tcss           # TUI stylesheets
@@ -451,9 +450,9 @@ The project includes a sample `access.log` with:
 
 ---
 
-## 🗺️ Roadmap
+## Status
 
-### ✅ v0.10 - COMPLETED
+### COMPLETED
 
 * [x] Nginx log parsing
 * [x] DataTable-based log viewer
@@ -469,10 +468,22 @@ The project includes a sample `access.log` with:
 * [x] **Multi-log file support** - Load & merge multiple files
 * [x] **Apache log parser** - Auto-detect format
 * [x] **Request rate visualization** - Requests per minute with spike detection
+* [x] **PEP 8 compliant** code with comprehensive type hints
+* [x] **Textual theme colors** (no hardcoded hex colors) 
+* [x] **Row Detail Inspector**  Allow users to inspect **full log entry details** by selecting a row
+    in the DataTable and pressing `Enter`, opening a **read-only modal view**.
 
 ### 🔮 Future Releases
 
 * [ ] GeoIP lookup
+* [ ] .PDF Convert Report
+* [ ] Saved Filter Presets
+* [ ] Mark / Bookmark Suspicious Entries
+* [ ] Investigation Session Metadata
+* [ ] Time Window Slider / Picker
+* [ ] Rule Hit Heatmap (Text-based)
+* [ ] IP Reputation Heuristic (Offline)
+* [ ] Session Correlation (IP + UA + time window)
 
 ---
 
@@ -513,32 +524,6 @@ Follows PEP 8 guidelines with type hints throughout the codebase.
 * **Explainable rules** - No black-box AI, transparent detection logic
 * **Keyboard-driven UX** - Efficient terminal navigation
 * **Readable code > fancy UI** - Clean, maintainable Python
-
----
-
-## 🏁 Status
-
-✅ **v1.0.0 COMPLETE** - Production Ready Release!
-
-Core features implemented:
-- ✅ Nginx & Apache log parser with auto-detection
-- ✅ DataTable-based TUI viewer with performance optimization
-- ✅ Filter engine with modal UI (Source filter, caching)
-- ✅ Statistics dashboard (with per-source breakdown)
-- ✅ Security rule engine (4 rules, YAML configurable)
-- ✅ **Markdown & JSON export** with format selection dialog
-- ✅ Sample log files for testing (Nginx + Apache samples)
-- ✅ Color-coded status codes (Textual theme colors)
-- ✅ Live log mode (`tail -f` style) with auto-refresh
-- ✅ Time-based charts with hourly traffic & error rate sparklines
-- ✅ **Request rate visualization** with spike detection
-- ✅ Custom YAML configuration for rules customization
-- ✅ **Multi-log file support** with auto-merge & source tracking
-- ✅ **Performance optimizations** (batch row updates, filter caching)
-- ✅ **PEP 8 compliant** code with comprehensive type hints
-- ✅ **Textual theme colors** (no hardcoded hex colors)
-
-**Production Ready:** All features tested, optimized, and documented!
 
 ---
 
