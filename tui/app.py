@@ -25,16 +25,12 @@ from typing import Any, List, Optional
 
 from rich.text import Text
 from textual.app import App, ComposeResult
-from textual.containers import Container, Horizontal, ScrollableContainer, Vertical
+from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
-from textual.screen import ModalScreen
 from textual.widgets import (
-    Button,
     DataTable,
     Footer,
     Header,
-    Input,
-    Label,
     RichLog,
     Static,
     TabbedContent,
@@ -49,164 +45,7 @@ from core.stats import StatsEngine
 from export.report import export_json, export_markdown
 from rules.security import SecurityRules
 from tui.charts import render_charts_dashboard, render_rate_dashboard
-from tui.modals.log_detail import LogDetailModal
-
-
-class FilterModal(ModalScreen):
-    """Modal dialog for setting log filters."""
-
-    BINDINGS = [("escape", "close", "Close"), ("enter", "apply", "Apply")]
-
-    def __init__(self, current_filters: FilterState) -> None:
-        """Initialize filter modal.
-
-        Args:
-            current_filters: Current filter state to populate fields
-        """
-        super().__init__()
-        self.current_filters = current_filters
-
-    def compose(self) -> ComposeResult:
-        with Container(id="filter-modal"):
-            yield Static("FILTER OPTIONS", id="filter-modal-title")
-            yield Label("Status Code:")
-            yield Input(
-                value=str(self.current_filters.status)
-                if self.current_filters.status
-                else "",
-                id="filter-status",
-                type="integer",
-            )
-            yield Label("IP Address:")
-            yield Input(value=self.current_filters.ip or "", id="filter-ip")
-            yield Label("HTTP Method:")
-            yield Input(value=self.current_filters.method or "", id="filter-method")
-            yield Label("Path:")
-            yield Input(value=self.current_filters.path or "", id="filter-path")
-            yield Label("Source:")
-            yield Input(
-                value=self.current_filters.source or "",
-                id="filter-source",
-                placeholder="e.g., access, server2",
-            )
-            with Horizontal(id="filter-modal-buttons"):
-                yield Button("APPLY", id="apply", variant="primary")
-                yield Button("CLEAR", id="clear", variant="warning")
-                yield Button("CANCEL", id="cancel", variant="default")
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "apply":
-            self._apply_filters()
-        elif event.button.id == "clear":
-            self._clear_filters()
-        elif event.button.id == "cancel":
-            self.dismiss(None)
-
-    def _apply_filters(self) -> None:
-        """Apply filters from modal."""
-        status_input = self.query_one("#filter-status", Input).value
-        method = self.query_one("#filter-method", Input).value
-        ip = self.query_one("#filter-ip", Input).value
-        path = self.query_one("#filter-path", Input).value
-        source = self.query_one("#filter-source", Input).value
-
-        filters = FilterState(
-            status=int(status_input) if status_input else None,
-            method=method.upper() if method else None,
-            ip=ip if ip else None,
-            path=path if path else None,
-            source=source if source else None,
-        )
-        self.dismiss(filters)
-
-    def _clear_filters(self) -> None:
-        for widget_id in [
-            "filter-status",
-            "filter-method",
-            "filter-ip",
-            "filter-path",
-            "filter-source",
-        ]:
-            self.query_one(f"#{widget_id}", Input).value = ""
-
-    def action_close(self) -> None:
-        self.dismiss(None)
-
-    def action_apply(self) -> None:
-        self._apply_filters()
-
-
-class ExportModal(ModalScreen):
-    """Modal dialog for selecting export format."""
-
-    BINDINGS = [("escape", "close", "Close")]
-
-    def compose(self) -> ComposeResult:
-        with Container(id="export-modal"):
-            yield Static("EXPORT REPORT", id="export-modal-title")
-            yield Static("Select export format:", id="export-modal-label")
-            with Horizontal(id="export-modal-buttons"):
-                yield Button("📄 Markdown", id="export-md", variant="primary")
-                yield Button("📋 JSON", id="export-json", variant="default")
-                yield Button("Both", id="export-both", variant="default")
-                yield Button("Cancel", id="export-cancel", variant="default")
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id in ["export-md", "export-json", "export-both"]:
-            self.dismiss(event.button.id)
-        elif event.button.id == "export-cancel":
-            self.dismiss(None)
-
-    def action_close(self) -> None:
-        self.dismiss(None)
-
-
-class HelpModal(ModalScreen):
-    """Modal dialog showing keyboard shortcuts."""
-
-    BINDINGS = [("escape", "close", "Close")]
-
-    def compose(self) -> ComposeResult:
-        with Container(id="help-modal"):
-            yield Static("KEYBOARD SHORTCUTS", id="help-modal-title")
-            with ScrollableContainer(id="help-content"):
-                yield Static(
-                    "NAVIGATION:\n"
-                    "  f - Open filters\n"
-                    "  c - Clear filters\n"
-                    "  j/k - Scroll (focused panel)\n"
-                    "  g/G - Top/Bottom of log\n"
-                    "\n"
-                    "VIEW SWITCHING:\n"
-                    "  s - Toggle info panel\n"
-                    "  a - Show alerts (auto-scroll)\n"
-                    "  t - Show charts\n"
-                    "  TAB - Switch between panels\n"
-                    "\n"
-                    "LIVE MODE:\n"
-                    "  l - Toggle live mode (tail -f style)\n"
-                    "\n"
-                    "CONFIG & EXPORT:\n"
-                    "  o - Open/reload config (YAML)\n"
-                    "  e - Export report (MD/JSON)\n"
-                    "  r - Reload log file\n"
-                    "\n"
-                    "OTHER:\n"
-                    "  ? - Show this help\n"
-                    "  q - Quit\n"
-                    "\n"
-                    "[dim]Tip: Press TAB to focus on different panels,[/]\n"
-                    "[dim]then use j/k to scroll[/]",
-                    id="help-content",
-                )
-            yield Button("CLOSE", id="close", variant="primary")
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "close":
-            self.dismiss()
-
-    def action_close(self) -> None:
-        self.dismiss()
+from tui.modals import ExportModal, FilterModal, HelpModal, LogDetailModal
 
 
 class LogInvestigatorApp(App):
@@ -428,7 +267,7 @@ class LogInvestigatorApp(App):
                 if len(new_entries) <= 5:
                     self.notify(f"+{len(new_entries)} new entries", timeout=1)
 
-        except Exception as e:
+        except Exception:
             # Silently ignore errors in live mode
             pass
 
@@ -812,7 +651,7 @@ class LogInvestigatorApp(App):
                         output_path=json_path,
                         entries=entries,
                     )
-                    self.notify(f"✅ Both formats exported!")
+                    self.notify("✅ Both formats exported!")
 
             except Exception as e:
                 self.notify(f"Export failed: {e}", severity="error")
