@@ -8,6 +8,7 @@ __pycache__/
 reports/
 TODO.md
 Row-Detail-Inspector.md
+GIT_SETUP.md
 
 # C extensions
 *.so
