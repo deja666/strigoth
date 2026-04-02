@@ -391,6 +391,20 @@ class LogInvestigatorApp(App):
                 f"  {start.strftime('%H:%M:%S')} - {end.strftime('%H:%M:%S')}"
             )
 
+        # Add Top IPs (Top 5)
+        if self.stats.top_ips:
+            content.write("")
+            content.write("[bold]Top IPs:[/]")
+            for ip, count in self.stats.top_ips[:5]:  # Show top 5 only
+                content.write(f"  {ip}: {count:,} requests")
+
+        # Add HTTP Methods breakdown
+        if self.stats.methods:
+            content.write("")
+            content.write("[bold]HTTP Methods:[/]")
+            for method, count in sorted(self.stats.methods.items()):
+                content.write(f"  {method}: {count:,}")
+
     def _update_alerts(self, content: RichLog) -> None:
         """Update alerts view - show ALL alerts without paging."""
         content.clear()
