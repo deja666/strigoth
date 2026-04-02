@@ -73,8 +73,8 @@ class LogInvestigatorApp(App):
         ("l", "toggle_live", "Live"),
     ]
 
-    TITLE = "STRIGOTH LOG INVESTIGATOR"
-    SUB_TITLE = "v1.0.0"
+    TITLE = "STRIGOTH"
+    SUB_TITLE = "v1.2.2"
 
     # Reactive state
     show_stats = reactive(True)
@@ -391,6 +391,20 @@ class LogInvestigatorApp(App):
                 f"  {start.strftime('%H:%M:%S')} - {end.strftime('%H:%M:%S')}"
             )
 
+        # Add Top IPs (Top 5)
+        if self.stats.top_ips:
+            content.write("")
+            content.write("[bold]Top IPs:[/]")
+            for ip, count in self.stats.top_ips[:5]:  # Show top 5 only
+                content.write(f"  {ip}: {count:,} requests")
+
+        # Add HTTP Methods breakdown
+        if self.stats.methods:
+            content.write("")
+            content.write("[bold]HTTP Methods:[/]")
+            for method, count in sorted(self.stats.methods.items()):
+                content.write(f"  {method}: {count:,}")
+
     def _update_alerts(self, content: RichLog) -> None:
         """Update alerts view - show ALL alerts without paging."""
         content.clear()
@@ -409,7 +423,7 @@ class LogInvestigatorApp(App):
 
         content.write("[bold]SECURITY ALERTS[/]")
         content.write(
-            f"[yellow]Total: {total_alerts} | High: {high_count} | Medium: {medium_count} | Low: {low_count}[/yellow]"
+            f"Total: {total_alerts} | [red]High: {high_count}[/red] | [yellow]Medium: {medium_count}[/yellow] | Low: {low_count}"
         )
         content.write("")
         content.write("[dim]Use J/K to scroll[/]")

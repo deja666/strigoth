@@ -18,6 +18,27 @@ Reading raw log files manually is time-consuming and error-prone.
 
 ---
 
+## 🎬 Demo & Showcase
+
+### **See Strigoth in Action!**
+
+![Strigoth Demo](media/media.gif)
+
+**Features shown in demo:**
+- 📊 Interactive DataTable with color-coded status codes
+- 🔍 Real-time filtering with modal dialog
+- 📈 Live statistics dashboard
+- 🚨 Security alerts detection
+- ⌨️ Keyboard-driven navigation
+- 📋 Export reports (Markdown/JSON)
+
+**Try it yourself:**
+```bash
+python -m tui.app sample_logs/access.log
+```
+
+---
+
 ## 🚀 Quick Start
 
 ### Installation

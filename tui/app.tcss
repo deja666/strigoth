@@ -344,10 +344,8 @@ ModalScreen {
    Log Detail Modal
    ─────────────────────────────────────────────────────────────────────── */
 #log-detail-modal {
-    align: center middle;
     width: 80;
     height: auto;
-    max-height: 90%;
     background: $surface;
     border: thick $primary;
     padding: 1 2;
@@ -368,13 +366,6 @@ ModalScreen {
 #modal-content Static {
     margin: 1 0;
     width: 100%;
-}
-
-#raw-log {
-    background: $surface-darken-2;
-    padding: 1;
-    margin-top: 1;
-    overflow: hidden;
 }
 
 /* ───────────────────────────────────────────────────────────────────────
