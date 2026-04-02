@@ -73,8 +73,8 @@ class LogInvestigatorApp(App):
         ("l", "toggle_live", "Live"),
     ]
 
-    TITLE = "STRIGOTH LOG INVESTIGATOR"
-    SUB_TITLE = "v1.0.0"
+    TITLE = "STRIGOTH"
+    SUB_TITLE = "v1.2.2"
 
     # Reactive state
     show_stats = reactive(True)
@@ -423,7 +423,7 @@ class LogInvestigatorApp(App):
 
         content.write("[bold]SECURITY ALERTS[/]")
         content.write(
-            f"[yellow]Total: {total_alerts} | High: {high_count} | Medium: {medium_count} | Low: {low_count}[/yellow]"
+            f"Total: {total_alerts} | [red]High: {high_count}[/red] | [yellow]Medium: {medium_count}[/yellow] | Low: {low_count}"
         )
         content.write("")
         content.write("[dim]Use J/K to scroll[/]")
