@@ -21,7 +21,7 @@ Features:
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from rich.text import Text
 from textual.app import App, ComposeResult
@@ -45,7 +45,7 @@ from core.stats import StatsEngine
 from export.report import export_json, export_markdown
 from rules.security import SecurityRules
 from tui.charts import render_charts_dashboard, render_rate_dashboard
-from tui.modals import ExportModal, FilterModal, HelpModal, LogDetailModal
+from tui.modals import ExportModal, FilterModal, HelpModal, LogDetailModal, PresetModal
 
 
 class LogInvestigatorApp(App):
@@ -68,13 +68,14 @@ class LogInvestigatorApp(App):
         ("?", "show_help", "Help"),
         ("j", "scroll_down", "Down"),
         ("k", "scroll_up", "Up"),
+        ("l", "toggle_live", "Live"),
+        ("P", "manage_presets", "Presets"),
         ("g", "go_top", "Top"),
         ("G", "go_bottom", "Bottom"),
-        ("l", "toggle_live", "Live"),
     ]
 
     TITLE = "STRIGOTH"
-    SUB_TITLE = "v1.2.2"
+    SUB_TITLE = "v1.3.0"
 
     # Reactive state
     show_stats = reactive(True)
@@ -202,18 +203,18 @@ class LogInvestigatorApp(App):
 
     def _show_detail_modal(self, entry_index: int) -> None:
         """Show detail modal for entry at given index.
-        
+
         Args:
             entry_index: Index in filtered_entries list
         """
         if 0 <= entry_index < len(self.filtered_entries):
             log_entry = self.filtered_entries[entry_index]
-            
+
             def handle_navigation(result: Any) -> None:
                 """Handle modal dismissal and navigation."""
                 if result and isinstance(result, dict):
                     action = result.get("action")
-                    
+
                     if action == "navigate":
                         # User pressed n or p, open new modal
                         self._show_detail_modal(result["index"])
@@ -223,16 +224,16 @@ class LogInvestigatorApp(App):
                         if ip:
                             # Replace current filters with IP filter
                             self.filter_engine.filters = FilterState(ip=ip)
-                            
+
                             # Invalidate cache and apply filters
                             self._invalidate_filter_cache()
                             self._apply_filters()
-                            
+
                             self.notify(f"Filtered by IP: {ip}")
-            
+
             self.push_screen(
                 LogDetailModal(log_entry, entry_index, self.filtered_entries),
-                handle_navigation
+                handle_navigation,
             )
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
@@ -585,6 +586,20 @@ class LogInvestigatorApp(App):
                 self._apply_filters()
 
         self.push_screen(FilterModal(self.filter_engine.filters), handle_filters)
+
+    def action_manage_presets(self) -> None:
+        """Open preset manager modal."""
+
+        def handle_preset_result(result: Optional[Dict[str, Any]]) -> None:
+            if result and result.get("action") == "load":
+                filter_state = result.get("filter")
+                if filter_state:
+                    self.filter_engine.filters = filter_state
+                    self._invalidate_filter_cache()
+                    self._apply_filters()
+                    self.notify("Preset loaded successfully.")
+
+        self.push_screen(PresetModal(self.filter_engine.filters), handle_preset_result)
 
     def action_clear_filters(self) -> None:
         """Clear filters."""

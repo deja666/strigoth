@@ -87,6 +87,9 @@ python -m tui.app sample_logs/access.log
 * ✅ **Time-based charts** - Traffic visualization with sparklines
 * ✅ **Request rate visualization** - Requests per minute with spike detection
 * ✅ **Custom YAML configuration** - Customize rules without coding
+* ✅ **Filter Presets** - Save, load, and delete complex filter combinations
+* ✅ **Row Detail Inspector** - Inspect log details with keyboard navigation & quick actions
+* ✅ **Enhanced Statistics** - Includes Top IPs and HTTP Methods breakdown
 * ✅ Terminal-only (TUI)
 
 ### Supported Logs
@@ -101,7 +104,7 @@ python -m tui.app sample_logs/access.log
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  STRIGOTH LOG INVESTIGATOR v1.0.0              [Header]         │
+│  STRIGOTH LOG INVESTIGATOR v1.3.0              [Header]         │
 ├──────────┬──────────────────────────────┬───────────┬───────────┤
 │ Filters  │  DataTable (Log Viewer)      │ Statistics│  Alerts   │
 │──────────│──────────────────────────────│───────────┼───────────┤
@@ -135,10 +138,21 @@ python -m tui.app sample_logs/access.log
 | `o`       | Open/reload config (YAML) |
 | `r`       | Reload log file           |
 | `e`       | Export report (MD/JSON)   |
+| `P`       | Manage filter presets     |
 | `?`       | Show help                 |
 | `q`       | Quit application          |
-| `Enter`   | Select row                |
+| `Enter`   | Select row / Inspect      |
 | `Escape`  | Close modal / Cancel      |
+
+### 🕵️ Row Detail Inspector Keys
+*When a row is selected (Modal Open):*
+
+| Key | Action                    |
+| --- | ------------------------- |
+| `n` | Next log entry            |
+| `p` | Previous log entry        |
+| `c` | Copy IP to clipboard      |
+| `f` | Quick filter by this IP   |
 
 ---
 
@@ -175,21 +189,29 @@ strigoth/
 │   ├── loader.py          # Log file loading (stream/batch)
 │   ├── config.py          # Configuration loader for YAML-based rule customization.
 │   ├── stats.py           # Statistics aggregation engine
-│   └── filter_engine.py   # Filter logic and state
+│   ├── filter_engine.py   # Filter logic and state
+│   └── presets.py         # Filter presets manager
 ├── parser/
 │   ├── __init__.py
-│   └── nginx.py           # Nginx log parser with regex
-│   └── apache.py          # Apache log parser with regex
+│   ├── nginx.py           # Nginx log parser with regex
+│   ├── apache.py          # Apache log parser with regex
 │   └── detector.py        # Log parser with regex auto-detection
 ├── rules/
 │   ├── __init__.py
 │   └── security.py        # Security rule engine
+├── tests/                 # Pytest test suite
 ├── reports/               # Generated Folder For Report File
 ├── export/
 │   ├── __init__.py
 │   └── report.py          # Markdown/JSON export
 ├── tui/
 │   ├── modals/            # Modals Textual TUI
+│   │   ├── __init__.py
+│   │   ├── filter.py      # Filter modal
+│   │   ├── export.py      # Export modal
+│   │   ├── help.py        # Help modal
+│   │   ├── preset.py      # Preset modal
+│   │   └── log_detail.py  # Log detail inspector
 │   ├── __init__.py
 │   ├── app.py             # Main Textual TUI application
 │   └── app.tcss           # TUI stylesheets
@@ -234,6 +256,41 @@ python -m tui.app server1.log server2.log server3.log
 4. Only logs from `server2.log` are displayed
 
 Clear filters by pressing `f` and clicking **CLEAR**.
+
+---
+
+## 💾 Filter Presets
+
+Save and load complex filter combinations for quick reuse. Presets are stored in `presets.json` and persist across sessions.
+
+### Usage
+
+1.  **Configure Filters:** Set your desired filters (e.g., Status: 500, IP: 10.0.0.50) and apply them.
+2.  **Open Manager:** Press **`P`** to open the Preset Manager.
+3.  **Save Preset:**
+    *   Type a name (e.g., "Critical Errors") in the input field.
+    *   Click **Save** or press `s`.
+4.  **Load Preset:**
+    *   Select a preset from the list.
+    *   Click **Load** or press `Enter` / `l`.
+5.  **Delete Preset:**
+    *   Select a preset from the list.
+    *   Click **Delete** or press `d`.
+
+> **Pro Tip:** Use presets to quickly switch between investigation modes like "Brute Force Hunting" (401s) or "Server Errors" (500s).
+
+---
+
+## 🕵️ Row Detail Inspector
+
+Select any row in the DataTable and press **`Enter`** to open the **Row Detail Inspector**. This modal provides a focused view of the full log entry and advanced investigation tools.
+
+### Inspector Features
+
+*   **Navigation:** Use **`n`** (Next) and **`p`** (Previous) to browse through entries without closing the modal.
+*   **Quick Copy:** Press **`c`** to copy the IP address to your system clipboard instantly.
+*   **Pivot Investigation:** Press **`f`** to instantly filter the main table to show *only* traffic from this specific IP.
+*   **Context:** View the count of related entries from the same IP currently visible in your filtered view.
 
 ---
 
@@ -473,7 +530,7 @@ The project includes a sample `access.log` with:
 
 ## Status
 
-### COMPLETED
+### COMPLETED (v1.3.0)
 
 * [x] Nginx log parsing
 * [x] DataTable-based log viewer
@@ -490,15 +547,17 @@ The project includes a sample `access.log` with:
 * [x] **Apache log parser** - Auto-detect format
 * [x] **Request rate visualization** - Requests per minute with spike detection
 * [x] **PEP 8 compliant** code with comprehensive type hints
-* [x] **Textual theme colors** (no hardcoded hex colors) 
+* [x] **Textual theme colors** (no hardcoded hex colors)
 * [x] **Row Detail Inspector**  Allow users to inspect **full log entry details** by selecting a row
-    in the DataTable and pressing `Enter`, opening a **read-only modal view**.
+    in the DataTable and pressing `Enter`, opening a **read-only modal view** with navigation (`n`/`p`) and quick actions (`c`/`f`).
+* [x] **Filter Presets** - Save, load, and delete complex filter combinations for quick reuse.
+* [x] **Enhanced Stats** - Top IPs and HTTP Methods breakdown.
+* [x] **Comprehensive Test Suite** - 65+ tests covering parsers, core logic, and exports.
 
 ### 🔮 Future Releases
 
 * [ ] GeoIP lookup
 * [ ] .PDF Convert Report
-* [ ] Saved Filter Presets
 * [ ] Mark / Bookmark Suspicious Entries
 * [ ] Investigation Session Metadata
 * [ ] Time Window Slider / Picker
@@ -529,13 +588,32 @@ pip install -r requirements.txt
 # Syntax check
 python -m py_compile tui/app.py
 
-# Import test
-python -c "from tui.app import LogInvestigatorApp; print('OK')"
+# Run pytest suite
+pytest
+
+# Run pytest with coverage report
+pytest --cov=strigoth --cov-report=term-missing
 ```
 
 ### Code Style
 
-Follows PEP 8 guidelines with type hints throughout the codebase.
+Follows PEP 8 guidelines with comprehensive type hints and docstrings.
+
+---
+
+## 🧪 Testing
+
+The project includes a comprehensive automated test suite using **pytest**.
+
+*   **Parser Tests:** Validating Nginx and Apache log parsing.
+*   **Core Logic:** Testing filter engines, statistics, and security rules.
+*   **Export:** Verifying Markdown and JSON report generation.
+*   **Coverage:** High coverage on critical backend modules.
+
+**Run tests via:**
+```bash
+pytest
+```
 
 ---
 
