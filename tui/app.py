@@ -200,6 +200,41 @@ class LogInvestigatorApp(App):
         except Exception as e:
             self.notify(f"Error: {e}", severity="error")
 
+    def _show_detail_modal(self, entry_index: int) -> None:
+        """Show detail modal for entry at given index.
+        
+        Args:
+            entry_index: Index in filtered_entries list
+        """
+        if 0 <= entry_index < len(self.filtered_entries):
+            log_entry = self.filtered_entries[entry_index]
+            
+            def handle_navigation(result: Any) -> None:
+                """Handle modal dismissal and navigation."""
+                if result and isinstance(result, dict):
+                    action = result.get("action")
+                    
+                    if action == "navigate":
+                        # User pressed n or p, open new modal
+                        self._show_detail_modal(result["index"])
+                    elif action == "filter_ip":
+                        # User pressed f, apply filter
+                        ip = result.get("ip")
+                        if ip:
+                            # Replace current filters with IP filter
+                            self.filter_engine.filters = FilterState(ip=ip)
+                            
+                            # Invalidate cache and apply filters
+                            self._invalidate_filter_cache()
+                            self._apply_filters()
+                            
+                            self.notify(f"Filtered by IP: {ip}")
+            
+            self.push_screen(
+                LogDetailModal(log_entry, entry_index, self.filtered_entries),
+                handle_navigation
+            )
+
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Handle DataTable row selection (Enter key press).
 
@@ -216,8 +251,7 @@ class LogInvestigatorApp(App):
 
             # Check bounds and show modal
             if 0 <= idx < len(self.filtered_entries):
-                log_entry = self.filtered_entries[idx]
-                self.push_screen(LogDetailModal(log_entry))
+                self._show_detail_modal(idx)
 
     def watch_live_mode(self, live: bool) -> None:
         """Handle live mode state changes."""
